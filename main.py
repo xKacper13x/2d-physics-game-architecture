@@ -6,9 +6,16 @@ class AngryBirdsApp:
     def __init__(self):
         pygame.init()
         self.screen = pygame.display.set_mode((1920, 1080))
+        screen_x = self.screen.get_width()
+        screen_y = self.screen.get_height()
+        self._screen_size = pygame.Vector2(screen_x, screen_y)
         self.clock = pygame.time.Clock()
         self.running = True
-        self.state = TitleScreenState()
+
+        self.state = TitleScreenState(self._screen_size)
+
+    def screen_size(self):
+        return self._screen_size
 
     def run(self):
         delta_time = 0.1
