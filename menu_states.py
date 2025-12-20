@@ -1,7 +1,6 @@
 import buttons
 import pygame
-import exceptions
-import os
+import helpers
 
 
 class State:
@@ -14,28 +13,14 @@ class State:
     def draw(self, screen):
         screen.fill((255, 255, 255))
 
-    def check_path(self, path):
-        if not os.path.exists(path):
-            raise exceptions.MissingResourceError(path)
-
-    def check_font_size(self, size=0):
-        if size <= 0:
-            msg = f"Font size must be > 0. Provided: {size}"
-            raise exceptions.InvalidConfigurationError(msg)
-
     def load_image(self, img_path, img_size=None):
-        self.check_path(img_path)
-
         if img_size is None:
             img_size = self._screen_size
-
-        image = pygame.image.load(img_path).convert()
-        image = pygame.transform.scale(image, img_size)
-        return image
+        return helpers.load_image(img_path, img_size)
 
     def initialize_font(self, font_path, font_size):
-        self.check_path(font_path)
-        self.check_font_size(font_size)
+        helpers.check_path(font_path)
+        helpers.check_size(font_size)
         if not pygame.font.get_init():
             pygame.font.init()
         font = pygame.font.Font(font_path, font_size)
@@ -47,7 +32,7 @@ class TitleScreenState(State):
     def __init__(self, screen_size):
         super().__init__(screen_size)
         self.pressed_keys = []
-        self._background_image = self.load_image('images/Title-Screen.png')
+        self._background_image = self.load_image('images/Title_Screen.jpg')
 
         # font_path = 'fonts/angrybirds-regular.ttf'
         # self.title_font = self.initialize_font(font_path, font_size=50)

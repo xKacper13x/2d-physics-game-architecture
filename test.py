@@ -7,7 +7,7 @@ clock = pygame.time.Clock()
 
 player_pos = pygame.Vector2(300, 300)
 running = True
-red_img = pygame.image.load('images/red.png').convert()
+red_img = pygame.image.load('images/Title_Screen_button.png').convert_alpha()
 red_img = pygame.transform.scale(red_img,
                                 (red_img.get_width() / 2,
                                 red_img.get_height() / 2))

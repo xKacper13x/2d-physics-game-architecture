@@ -11,7 +11,7 @@ def test_load_image_no_size():
     pygame.display.set_mode((1, 1))
 
     state = State((1920, 1080))
-    img = state.load_image('images/Title-Screen.png')
+    img = state.load_image('images/Title_Screen.jpg')
     assert img.get_width() == 1920
     assert img.get_height() == 1080
 

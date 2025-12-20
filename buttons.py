@@ -1,4 +1,5 @@
 import pygame
+import helpers
 
 
 class Button:
@@ -7,3 +8,12 @@ class Button:
 
     def rect(self):
         return self._button_rect
+
+    def load_image(self, img_path, img_size=None):
+        return helpers.load_image(img_path, img_size)
+
+    def draw(self, screen, pos):
+        screen.blit(self.image, pos)
+
+    def is_clicked():
+        pass
