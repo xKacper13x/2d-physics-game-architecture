@@ -1,21 +1,21 @@
 import pygame
-from game_gui import TitleScreenState
+from menu_states import TitleScreenState
 
 
 class AngryBirdsApp:
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((1920, 1080))
-        screen_x = self.screen.get_width()
-        screen_y = self.screen.get_height()
-        self._screen_size = pygame.Vector2(screen_x, screen_y)
+        self._screen = pygame.display.set_mode((1920, 1080))
+        self._screen_size = self.screen_size()
         self.clock = pygame.time.Clock()
         self.running = True
 
         self.state = TitleScreenState(self._screen_size)
 
     def screen_size(self):
-        return self._screen_size
+        screen_x = self._screen.get_width()
+        screen_y = self._screen.get_height()
+        return pygame.Vector2(screen_x, screen_y)
 
     def run(self):
         delta_time = 0.1
@@ -25,7 +25,7 @@ class AngryBirdsApp:
             self.state = self.state.update()
 
             # 2. Rysowanie
-            self.state.draw(self.screen)
+            self.state.draw(self._screen)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
