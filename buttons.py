@@ -15,5 +15,11 @@ class Button:
     def draw(self, screen, pos):
         screen.blit(self.image, pos)
 
-    def is_clicked():
-        pass
+    def is_clicked(self, events):
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    m_collision = self._button_rect.collidepoint(event.pos)
+                    if m_collision:
+                        return True
+        return False

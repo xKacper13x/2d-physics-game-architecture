@@ -11,7 +11,7 @@ def test_load_image_no_size():
     pygame.display.set_mode((1, 1))
 
     state = State((1920, 1080))
-    img = state.load_image('images/Title_Screen.jpg')
+    img = state.load_image('assets/images/Title_Screen.jpg')
     assert img.get_width() == 1920
     assert img.get_height() == 1080
 
@@ -31,4 +31,4 @@ def test_initialize_font_invalid_path():
 def test_initialize_font_invalid_size():
     state = State((1920, 1080))
     with pytest.raises(exceptions.InvalidConfigurationError):
-        state.initialize_font('fonts/angrybirds-regular.ttf', 0)
+        state.initialize_font('assets/fonts/angrybirds-regular.ttf', 0)

@@ -20,14 +20,15 @@ class AngryBirdsApp:
     def run(self):
         delta_time = 0.1
         while self.running:
+            events = pygame.event.get()
             # 1. Przekaż obsługę logiki do aktualnego stanu
             # Stan zwraca samego siebie lub NOWY stan
-            self.state = self.state.update()
+            self.state = self.state.update(events)
 
             # 2. Rysowanie
             self.state.draw(self._screen)
 
-            for event in pygame.event.get():
+            for event in events:
                 if event.type == pygame.QUIT:
                     self.running = False
 
