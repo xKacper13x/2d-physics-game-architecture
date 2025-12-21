@@ -46,3 +46,11 @@ while running:
 
 
 pygame.quit()
+
+        # font_path = 'assets/fonts/Dalek.ttf'
+        # self.title_font = self.initialize_font(font_path, font_size=20)
+        # text_color = (0, 0, 0)
+        # self.text_surface = self.title_font.render("MAIN MENU", True, text_color)
+        # self.text_rect = self.text_surface.get_rect()
+        # self.text_rect.center = (self._screen_size[0] // 2, self._screen_size[1] // 2)
+        

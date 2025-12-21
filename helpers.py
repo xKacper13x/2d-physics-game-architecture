@@ -23,6 +23,10 @@ def check_size(size=0):
         raise exceptions.InvalidConfigurationError(msg)
 
 
+def check_pos(pos):
+    pass
+
+
 # None oznacza, że zostawiamy oryginalny rozmiar
 def load_image(img_path, img_size=None):
     check_path(img_path)
@@ -32,3 +36,12 @@ def load_image(img_path, img_size=None):
         check_size(img_size)
         image = pygame.transform.scale(image, img_size)
     return image
+
+
+def initialize_font(font_path, font_size):
+    check_path(font_path)
+    check_size(font_size)
+    if not pygame.font.get_init():
+        pygame.font.init()
+    font = pygame.font.Font(font_path, font_size)
+    return font

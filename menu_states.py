@@ -18,40 +18,52 @@ class State:
             img_size = self._screen_size
         return helpers.load_image(img_path, img_size)
 
-    def initialize_font(self, font_path, font_size):
-        helpers.check_path(font_path)
-        helpers.check_size(font_size)
-        if not pygame.font.get_init():
-            pygame.font.init()
-        font = pygame.font.Font(font_path, font_size)
-        return font
-# 'fonts/angrybirds-regular.ttf'
-
 
 class TitleScreenState(State):
     def __init__(self, screen_size):
         super().__init__(screen_size)
         self.pressed_keys = []
         self._background_image = self.load_image(
-            'assets/images/Title_Screen.jpg')
+            'assets/images/Title_Screen.png')
+        self.create_buttons(screen_size)
 
-        # font_path = 'assets/fonts/Dalek.ttf'
-        # self.title_font = self.initialize_font(font_path, font_size=20)
-        # text_color = (0, 0, 0)
-        # self.text_surface = self.title_font.render("MAIN MENU", True, text_color)
-        # self.text_rect = self.text_surface.get_rect()
-        # self.text_rect.center = (self._screen_size[0] // 2, self._screen_size[1] // 2)
+    def create_buttons(self, screen_size):
+        y_pos = 470
+        center_x = screen_size[0] * 0.5
+        spacing = 300
+        size = pygame.Vector2(175, 175)
+        path = 'assets/images/Title_Screen_button.png'
+        font_path = 'assets/fonts/Dalek.ttf'
+        font_size = 35
+
+        pos = pygame.Vector2(center_x - spacing, y_pos)
+        self._play_button = buttons.Button(pos, size, path)
+        self._play_button.add_text('PLAY', font_path, font_size)
+
+        pos = pygame.Vector2(center_x, y_pos)
+        self._settings_button = buttons.Button(pos, size, path)
+        self._settings_button.add_text('OPTIONS', font_path, font_size)
+
+        pos = pygame.Vector2(center_x + spacing, y_pos)
+        self._quit_button = buttons.Button(pos, size, path)
+        self._quit_button.add_text('QUIT', font_path, font_size)
 
     def update(self, events):
-        self.pressed_keys = pygame.key.get_pressed()
-        if True in self.pressed_keys:
+        if self._play_button.is_clicked(events):
             return MainMenuState(self._screen_size)
+        elif self._settings_button.is_clicked(events):
+            pass
+            # return SettingsState(self._screen_size)
+        elif self._quit_button.is_clicked(events):
+            pygame.event.post(pygame.QUIT)
         else:
             return self
 
     def draw(self, screen):
         screen.blit(self._background_image, (0, 0))
-        # screen.blit(self.text_surface, self.text_rect)
+        self._play_button.draw(screen)
+        self._settings_button.draw(screen)
+        self._quit_button.draw(screen)
 
 
 class MainMenuState(State):
@@ -62,8 +74,4 @@ class MainMenuState(State):
         return super().update(events)
 
     def draw(self, screen):
-        middle = pygame.Vector2(self._screen_size / 4)
-        self.button = buttons.Button(middle[0], middle[1], 50, 50)
-
         super().draw(screen)
-        pygame.draw.rect(screen, (255, 255, 0), self.button.rect())

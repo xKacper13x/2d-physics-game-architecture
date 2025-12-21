@@ -1,4 +1,5 @@
 from menu_states import State
+from buttons import Button
 import exceptions
 import pytest
 import pygame
@@ -32,3 +33,39 @@ def test_initialize_font_invalid_size():
     state = State((1920, 1080))
     with pytest.raises(exceptions.InvalidConfigurationError):
         state.initialize_font('assets/fonts/angrybirds-regular.ttf', 0)
+
+
+def test_button_pos():
+    os.environ['SDL_VIDEODRIVER'] = 'dummy'
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+
+    button = Button((0, 0), (5, 5), 'assets/images/Title_Screen.jpg')
+    assert button.position() == (0, 0)
+
+
+def test_button_size():
+    os.environ['SDL_VIDEODRIVER'] = 'dummy'
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+
+    button = Button((0, 0), (5, 5), 'assets/images/Title_Screen.jpg')
+    assert button.size() == (5, 5)
+
+
+def test_button_invalid_size_x():
+    os.environ['SDL_VIDEODRIVER'] = 'dummy'
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+
+    with pytest.raises(exceptions.InvalidConfigurationError):
+        Button((0, 0), (-1, 5), 'assets/images/Title_Screen.jpg')
+
+
+def test_button_invalid_size_y():
+    os.environ['SDL_VIDEODRIVER'] = 'dummy'
+    pygame.init()
+    pygame.display.set_mode((1, 1))
+
+    with pytest.raises(exceptions.InvalidConfigurationError):
+        Button((0, 0), (5, -1), 'assets/images/Title_Screen.jpg')
