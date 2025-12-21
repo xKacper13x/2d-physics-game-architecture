@@ -1,14 +1,13 @@
+from game_states import GameObject
 import pygame
 import helpers
 
 
-class Button:
+class Button(GameObject):
     def __init__(self, pos, size, img_path):
-        helpers.check_pos(pos)
-        helpers.check_size(size)
-        self._image = self.load_image(img_path, size)
-        self._button_rect = self._image.get_rect()
-        self._button_rect.center = pos
+        super().__init__(pos, size, img_path)
+        self._text_surface = None
+        self._text_rect = None
 
     def position(self):
         return self._button_rect.center
@@ -22,10 +21,8 @@ class Button:
     def load_image(self, img_path, img_size=None):
         return helpers.load_image(img_path, img_size)
 
-    def draw(self, screen):
-        screen.blit(self._image, self._button_rect)
-        screen.blit(self._text_surface, self._text_rect)
-
+    def draw():
+        super()._
     def is_clicked(self, events):
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:

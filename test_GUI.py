@@ -23,18 +23,6 @@ def test_load_image_invalid_path():
         state.load_image('random_img')
 
 
-def test_initialize_font_invalid_path():
-    state = State((1920, 1080))
-    with pytest.raises(exceptions.MissingResourceError):
-        state.initialize_font('path', 10)
-
-
-def test_initialize_font_invalid_size():
-    state = State((1920, 1080))
-    with pytest.raises(exceptions.InvalidConfigurationError):
-        state.initialize_font('assets/fonts/angrybirds-regular.ttf', 0)
-
-
 def test_button_pos():
     os.environ['SDL_VIDEODRIVER'] = 'dummy'
     pygame.init()

@@ -1,11 +1,15 @@
 import pygame
+import sys
 from menu_states import TitleScreenState
 
 
-class AngryBirdsApp:
+class AngryKnightsApp:
     def __init__(self):
         pygame.init()
+        icon_image = pygame.image.load('assets/images/Title_Screen_button.png')
+        pygame.display.set_icon(icon_image)
         self._screen = pygame.display.set_mode((1920, 1080))
+        pygame.display.set_caption("Angry Knights")
         self._screen_size = self.screen_size()
         self.clock = pygame.time.Clock()
         self.running = True
@@ -38,5 +42,10 @@ class AngryBirdsApp:
 
 
 if __name__ == '__main__':
-    App = AngryBirdsApp()
+    if sys.platform == "win32":
+        import ctypes
+        # Dowolny unikalny ciąg znaków
+        myappid = 'mojanazwa.gra.knights.v1'
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+    App = AngryKnightsApp()
     App.run()

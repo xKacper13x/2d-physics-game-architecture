@@ -1,22 +1,6 @@
+from game_states import State
 import buttons
 import pygame
-import helpers
-
-
-class State:
-    def __init__(self, screen_size):
-        self._screen_size = screen_size
-
-    def update(self, events):
-        return self
-
-    def draw(self, screen):
-        screen.fill((255, 255, 255))
-
-    def load_image(self, img_path, img_size=None):
-        if img_size is None:
-            img_size = self._screen_size
-        return helpers.load_image(img_path, img_size)
 
 
 class TitleScreenState(State):
@@ -49,15 +33,16 @@ class TitleScreenState(State):
         self._quit_button.add_text('QUIT', font_path, font_size)
 
     def update(self, events):
+        result = self
         if self._play_button.is_clicked(events):
-            return MainMenuState(self._screen_size)
+            result = MainMenuState(self._screen_size)
         elif self._settings_button.is_clicked(events):
             pass
             # return SettingsState(self._screen_size)
         elif self._quit_button.is_clicked(events):
-            pygame.event.post(pygame.QUIT)
-        else:
-            return self
+            quit_event = pygame.event.Event(pygame.QUIT)
+            pygame.event.post(quit_event)
+        return result
 
     def draw(self, screen):
         screen.blit(self._background_image, (0, 0))

@@ -23,10 +23,6 @@ def check_size(size=0):
         raise exceptions.InvalidConfigurationError(msg)
 
 
-def check_pos(pos):
-    pass
-
-
 # None oznacza, że zostawiamy oryginalny rozmiar
 def load_image(img_path, img_size=None):
     check_path(img_path)
