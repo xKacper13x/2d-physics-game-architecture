@@ -1,4 +1,4 @@
-from game_states import State
+from game_states import State, GameState
 import buttons
 import pygame
 
@@ -35,7 +35,7 @@ class TitleScreenState(State):
     def update(self, events):
         result = self
         if self._play_button.is_clicked(events):
-            result = MainMenuState(self._screen_size)
+            result = GameState(self._screen_size, 1)
         elif self._settings_button.is_clicked(events):
             pass
             # return SettingsState(self._screen_size)

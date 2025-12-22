@@ -9,25 +9,22 @@ class Button(GameObject):
         self._text_surface = None
         self._text_rect = None
 
-    def position(self):
-        return self._button_rect.center
-
     def size(self):
-        return self._button_rect.size
+        return self._object_rect.size
 
     def rect(self):
-        return self._button_rect
+        return self._object_rect
 
-    def load_image(self, img_path, img_size=None):
-        return helpers.load_image(img_path, img_size)
+    def draw(self, screen):
+        super().draw(screen)
+        if self._text_surface is not None:
+            screen.blit(self._text_surface, self._text_rect)
 
-    def draw():
-        super()._
     def is_clicked(self, events):
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    m_collision = self._button_rect.collidepoint(event.pos)
+                    m_collision = self._object_rect.collidepoint(event.pos)
                     if m_collision:
                         return True
         return False
@@ -37,4 +34,4 @@ class Button(GameObject):
         text_color = (235, 213, 174)
         self._text_surface = self._button_font.render(text, True, text_color)
         self._text_rect = self._text_surface.get_rect()
-        self._text_rect.center = (self._button_rect.center)
+        self._text_rect.center = (self._object_rect.center)

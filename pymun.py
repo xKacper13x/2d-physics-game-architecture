@@ -64,3 +64,16 @@ while running:
     space.step(1/50)
     pygame.display.update()
     clock.tick(120)
+
+
+
+
+# if __name__ == '__main__':
+#     pygame.init()
+#     screen = pygame.display.set_mode((1920, 1080))
+#     pygame.display.set_caption("Angry Knights")
+#     clock = pygame.time.Clock()
+#     running = True
+
+#     state = GameState(screen, 1)
+#     state.update
