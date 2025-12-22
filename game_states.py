@@ -1,5 +1,6 @@
 import helpers
 import pymunk
+import pygame
 
 
 class GameObject:
@@ -27,14 +28,17 @@ class Projectile(GameObject):
         super().__init__(pos, size, img_path)
 
     def create_object(self, space, pos):
-        # oblicza moment bezwladności
-        mass = 50
+        mass = 1
         radius = 40
+        # oblicza moment bezwladności
         moment = pymunk.moment_for_circle(mass, 0, radius)
         self._body = pymunk.Body(mass, moment)
         self._body.position = pos
         self._shape = pymunk.Circle(self._body, radius)
         space.add(self._body, self._shape)
+
+    def launch(self, impulse_vector):
+        self._body.apply_impulse_at_local_point(impulse_vector)
 
     def body(self):
         return self._body
@@ -72,11 +76,12 @@ class GameState(State):
         super().__init__(screen_size)
         self._level = level
         self._space = pymunk.Space()
-        self._space.gravity = (0, 900)
+        self._space.gravity = (50, 900)
         self._objects = self.initialize_objects()
 
     def initialize_objects(self):
         rock = Projectile(self._space, (300, 0), 'assets/images/rock.png')
+
         objects = []
         objects.append(rock)
         return objects
@@ -89,6 +94,10 @@ class GameState(State):
         self._space.step(1/60)
         for object in self._objects:
             object.update()
+
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                self._objects[0].launch((2000, -2000))
         return self
 
     def draw(self, screen):

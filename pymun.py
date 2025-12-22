@@ -40,7 +40,8 @@ running = True
 
 space = pymunk.Space()
 space.gravity = (0, 150)
-apple_surface = pygame.image.load('assets/images/Title_Screen_button.png').convert_alpha()
+path = 'assets/images/Title_Screen_button.png'
+apple_surface = pygame.image.load(path).convert_alpha()
 apple_surface = pygame.transform.scale(apple_surface, (80, 80))
 
 apples = []
@@ -64,9 +65,6 @@ while running:
     space.step(1/50)
     pygame.display.update()
     clock.tick(120)
-
-
-
 
 # if __name__ == '__main__':
 #     pygame.init()

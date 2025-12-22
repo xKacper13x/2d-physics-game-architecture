@@ -33,16 +33,16 @@ class TitleScreenState(State):
         self._quit_button.add_text('QUIT', font_path, font_size)
 
     def update(self, events):
-        result = self
+        next_state = self
         if self._play_button.is_clicked(events):
-            result = GameState(self._screen_size, 1)
+            next_state = GameState(self._screen_size, 1)
         elif self._settings_button.is_clicked(events):
             pass
-            # return SettingsState(self._screen_size)
+            # next_state SettingsState(self._screen_size)
         elif self._quit_button.is_clicked(events):
             quit_event = pygame.event.Event(pygame.QUIT)
             pygame.event.post(quit_event)
-        return result
+        return next_state
 
     def draw(self, screen):
         screen.blit(self._background_image, (0, 0))
