@@ -38,6 +38,9 @@ class TitleScreenState(State):
             next_state = GameState(self._screen_size, 1)
         elif self._settings_button.is_clicked(events):
             pass
+            new_event = pygame.event.Event(pygame.KEYDOWN)
+            new_event.key = pygame.K_F11
+            pygame.event.post(new_event)
             # next_state SettingsState(self._screen_size)
         elif self._quit_button.is_clicked(events):
             quit_event = pygame.event.Event(pygame.QUIT)
