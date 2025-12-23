@@ -1,6 +1,7 @@
+from menu_states import TitleScreenState
 import pygame
 import sys
-from menu_states import TitleScreenState
+import ctypes
 
 
 class AngryKnightsApp:
@@ -8,7 +9,7 @@ class AngryKnightsApp:
         pygame.init()
         icon_image = pygame.image.load('assets/images/Title_Screen_button.png')
         pygame.display.set_icon(icon_image)
-        self._screen = pygame.display.set_mode((1920, 1080))
+        self._screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
         pygame.display.set_caption("Angry Knights")
         self._screen_size = self.screen_size()
         self.clock = pygame.time.Clock()
@@ -43,9 +44,12 @@ class AngryKnightsApp:
 
 if __name__ == '__main__':
     if sys.platform == "win32":
-        import ctypes
         # Dowolny unikalny ciąg znaków
         myappid = 'mojanazwa.gra.knights.v1'
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+        try:
+            ctypes.windll.shcore.SetProcessDpiAwareness(1)
+        except Exception:
+            ctypes.wind11.user32.SetProcessDPIAware()
     App = AngryKnightsApp()
     App.run()
