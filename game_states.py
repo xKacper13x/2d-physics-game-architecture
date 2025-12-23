@@ -22,12 +22,12 @@ class GameObject:
 
 class Projectile(GameObject):
     def __init__(self, space, pos, img_path, size=None):
-        self.create_object(space, pos)
+        self._create_object(space, pos)
         diameter = int(2*self._shape.radius)
         size = (diameter, diameter)
         super().__init__(pos, size, img_path)
 
-    def create_object(self, space, pos):
+    def _create_object(self, space, pos):
         mass = 1
         radius = 40
         # oblicza moment bezwladności
