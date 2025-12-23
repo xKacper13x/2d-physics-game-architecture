@@ -10,7 +10,8 @@ class AngryKnightsApp:
         icon_image = pygame.image.load('assets/images/Title_Screen_button.png')
         pygame.display.set_icon(icon_image)
 
-        self._set_screen_mode(True)
+        self._screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN
+                                               | pygame.SCALED)
         self._is_fullscreen = True
         pygame.display.set_caption("Angry Knights")
         self._screen_size = self.screen_size()
@@ -24,32 +25,14 @@ class AngryKnightsApp:
         screen_y = self._screen.get_height()
         return pygame.Vector2(screen_x, screen_y)
 
-    def _set_screen_mode(self, fullscreen: bool):
-        # Sprawdza, jaki mamy monitor
-        info = pygame.display.Info()
-        screen_w = info.current_w
-        screen_h = info.current_h
-        if screen_w >= 1920 and screen_h >= 1080:
-            if fullscreen:
-                self._screen = pygame.display.set_mode((1920, 1080),
-                                                       pygame.FULLSCREEN)
-            else:
-                self._screen = pygame.display.set_mode((1920, 1080))
-        else:
-            if fullscreen:
-                self._screen = pygame.display.set_mode((1920, 1080),
-                                                       pygame.FULLSCREEN
-                                                       | pygame.SCALED)
-            else:
-                self._screen = pygame.display.set_mode((1920, 1080),
-                                                       pygame.SCALED)
-
     def _change_screen_mode(self):
         if self._is_fullscreen:
-            self._set_screen_mode(False)
+            self._screen = pygame.display.set_mode((1920, 1080), pygame.SCALED)
             self._is_fullscreen = False
         else:
-            self._set_screen_mode(True)
+            self._screen = pygame.display.set_mode((1920, 1080),
+                                                   pygame.FULLSCREEN |
+                                                   pygame.SCALED)
             self._is_fullscreen = True
 
     def run(self):
