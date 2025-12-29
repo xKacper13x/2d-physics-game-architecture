@@ -33,12 +33,18 @@ class Slingshot(GameObject):
                               object_data['color_B'])
         self._rubber_width = object_data['rubber_width']
         self._img_path = object_data['img_path']
+
+        self._left_fork_offset = pygame.math.Vector2(self._width / -4.15,
+                                                     self._height / -3)
+        self._right_fork_offset = pygame.math.Vector2(self._width / 4.15,
+                                                      self._height / -2.6)
+
         super().__init__(self._pos, self._size, self._img_path)
 
     def draw_outer_rubber(self, screen, projectile_pos=None):
-        left_fork = (self._pos[0] - 47, self._pos[1] - 100)
+        left_fork = self._pos + self._left_fork_offset
         if projectile_pos is None:
-            right_fork = (self._pos[0] + 47, self._pos[1] - 115)
+            right_fork = self._pos + self._right_fork_offset
             pygame.draw.line(screen, self._rubber_color, left_fork,
                              right_fork, self._rubber_width)
         else:
@@ -46,7 +52,7 @@ class Slingshot(GameObject):
                              projectile_pos, self._rubber_width)
 
     def draw_inner_rubber(self, screen, projectile_pos):
-        right_fork = (self._pos[0] + 47, self._pos[1] - 115)
+        right_fork = self._pos + self._right_fork_offset
         pygame.draw.line(screen, self._rubber_color, right_fork,
                          projectile_pos, self._rubber_width)
 
@@ -87,7 +93,7 @@ class Projectile(GameObject):
     def go_to_start_pos(self):
         self._body.position = self._starting_pos
 
-    def is_dragged(self, events):
+    def is_dragged(self) -> bool:
         if pygame.mouse.get_pressed()[0]:
             mouse_pos = pygame.mouse.get_pos()
             m_collision = self._object_rect.collidepoint(mouse_pos)
@@ -95,7 +101,7 @@ class Projectile(GameObject):
                 return True
         return False
 
-    def is_on_sling(self):
+    def is_on_sling(self) -> bool:
         if self._body.body_type != pymunk.Body.DYNAMIC:
             return True
 

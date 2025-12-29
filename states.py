@@ -138,7 +138,7 @@ class GameState(State):
                     if distance < 80:
                         self._objects[self._ammo_pointer].go_to_start_pos()
 
-        if self._objects[0].is_dragged(events) and distance <= 5000:
+        if self._objects[0].is_dragged() and distance <= 5000:
             self._dragged_object = self._objects[self._ammo_pointer]
             self._objects[0].drag()
         else:
