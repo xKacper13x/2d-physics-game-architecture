@@ -1,0 +1,23 @@
+{
+    "background_img": "assets/images/Level1_bg.png",
+    "slingshot":{
+        "name": "slingshot",
+        "height": 300,
+        "pos_x": 260,
+        "pos_y": 770,
+        "color_R": 181,
+        "color_G": 74,
+        "color_B": 58,
+        "img_path": "assets/images/slingshot.png"
+    },
+    "projectiles":[
+        {
+            "name": "rock",
+            "mass": 1,
+            "radius":32,
+            "pos_x": 260,
+            "pos_y": 700,
+            "img_path": "assets/images/rock.png"
+        }
+    ]
+}

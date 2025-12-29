@@ -1,14 +1,17 @@
 from game_states import State, GameState
 import buttons
 import pygame
+import json
 
 
 class TitleScreenState(State):
     def __init__(self, screen_size):
         super().__init__(screen_size)
         self.pressed_keys = []
-        self._background_image = self.load_image(
-            'assets/images/Title_Screen.png')
+
+        with open('objects_config_files/menu.json') as file_handle:
+            data = json.load(file_handle)
+            self._set_background(data)
         self.create_buttons(screen_size)
 
     def create_buttons(self, screen_size):
@@ -48,7 +51,7 @@ class TitleScreenState(State):
         return next_state
 
     def draw(self, screen):
-        screen.blit(self._background_image, (0, 0))
+        super().draw(screen)
         self._play_button.draw(screen)
         self._settings_button.draw(screen)
         self._quit_button.draw(screen)

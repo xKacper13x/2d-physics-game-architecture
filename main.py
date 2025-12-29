@@ -10,9 +10,8 @@ class AngryKnightsApp:
         icon_image = pygame.image.load('assets/images/Title_Screen_button.png')
         pygame.display.set_icon(icon_image)
 
-        self._screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN
-                                               | pygame.SCALED)
-        self._is_fullscreen = True
+        self._screen = pygame.display.set_mode((1920, 1080), pygame.SCALED)
+        self._is_fullscreen = False
         pygame.display.set_caption("Angry Knights")
         self._screen_size = self.screen_size()
         self.clock = pygame.time.Clock()
