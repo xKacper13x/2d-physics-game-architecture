@@ -1,4 +1,4 @@
-from game_states import GameObject
+from game_objects import GameObject
 import pygame
 import helpers
 

@@ -1,4 +1,4 @@
-from menu_states import State
+from states import State
 from buttons import Button
 import exceptions
 import pytest

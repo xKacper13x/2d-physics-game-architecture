@@ -1,4 +1,4 @@
-from menu_states import TitleScreenState
+from states import MainMenuState
 import pygame
 import sys
 import ctypes
@@ -17,7 +17,7 @@ class AngryKnightsApp:
         self.clock = pygame.time.Clock()
         self.running = True
 
-        self.state = TitleScreenState(self._screen_size)
+        self.state = MainMenuState(self._screen_size)
 
     def screen_size(self):
         screen_x = self._screen.get_width()

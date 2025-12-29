@@ -5,9 +5,10 @@
         "height": 300,
         "pos_x": 260,
         "pos_y": 770,
-        "color_R": 181,
-        "color_G": 74,
+        "color_R": 169,
+        "color_G": 64,
         "color_B": 58,
+        "rubber_width": 7,
         "img_path": "assets/images/slingshot.png"
     },
     "projectiles":[
