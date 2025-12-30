@@ -20,5 +20,17 @@
             "pos_y": 700,
             "img_path": "assets/images/rock.png"
         }
+    ],
+    "structures":[
+        {
+            "name": "wall",
+            "mass": 3,
+            "health": 50,
+            "width": 50,
+            "height":150,
+            "pos_x": 900,
+            "pos_y": 50,
+            "img_path": "assets/images/rock.png"
+        }
     ]
 }

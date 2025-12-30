@@ -1,9 +1,10 @@
-from game_objects import Projectile, Slingshot
+from game_objects import Projectile, Slingshot, Structure, Ground
 import buttons
 import pygame
 import pymunk
 import helpers
 import json
+import math
 
 
 class State:
@@ -93,6 +94,7 @@ class GameState(State):
         self._ammo_pointer = 0
         self._object_on_sling = self._projectiles[self._ammo_pointer]
         self._dragged_object = None
+        self._ground = Ground(self._screen_size, 920, self._space)
 
     def _initialize_objects(self):
         path = f'objects_config_files/level{self._level}.json'
@@ -106,7 +108,8 @@ class GameState(State):
             self._slingshot_pos = (slingshot_x, slingshot_y)
 
             self._projectiles = self._initialize_projectiles(data)
-        return self._projectiles
+            self._structures = self._initialize_structures(data)
+        return self._projectiles + self._structures
 
     def _initialize_projectiles(self, data):
         all_projectiles = data['projectiles']
@@ -117,34 +120,41 @@ class GameState(State):
 
         return objects
 
+    def _initialize_structures(self, data):
+        all_structures = data['structures']
+        objects = []
+        for structure in all_structures:
+            object = Structure(self._space, structure)
+            objects.append(object)
+
+        return objects
+
     def _check_for_launch(self, events):
-        dis_x = abs(self._slingshot_pos[0] -
-                    self._objects[0].position()[0])
-        dis_y = abs(self._slingshot_pos[1] -
-                    self._objects[0].position()[1])
-        distance = max(dis_x, dis_y)
+        object_pos_x = self._objects[self._ammo_pointer].position()[0]
+        object_pos_y = self._objects[self._ammo_pointer].position()[1]
+
+        dis_x = self._slingshot_pos[0] - object_pos_x
+        dis_y = self._slingshot_pos[1] - object_pos_y
+        distance = math.dist(self._slingshot_pos,
+                             self._objects[self._ammo_pointer].position())
+
         for event in events:
             if event.type == pygame.MOUSEBUTTONUP:
                 if self._dragged_object is not None:
-                    if distance >= 50:
-                        object_pos_x = self._objects[0].position()[0]
-                        object_pos_y = self._objects[0].position()[1]
-                        direct_x = self._slingshot_pos[0] - object_pos_x
-                        direct_y = self._slingshot_pos[1] - object_pos_y
-
+                    if distance >= 70:
                         self._objects[self._ammo_pointer].launch(
-                                                                (direct_x*6.5,
-                                                                 direct_y*6.5))
-                    if distance < 80:
+                                                                (dis_x*6.5,
+                                                                 dis_y*6.5))
+                    else:
                         self._objects[self._ammo_pointer].go_to_start_pos()
+                    self._dragged_object = None
 
-        if self._objects[0].is_dragged() and distance <= 5000:
+        max_dis = 270
+        if self._objects[0].is_dragged() or self._dragged_object is not None:
             self._dragged_object = self._objects[self._ammo_pointer]
-            self._objects[0].drag()
-        else:
+            self._dragged_object.drag(self._slingshot_pos, max_dis)
+        elif not pygame.mouse.get_pressed()[0]:
             self._dragged_object = None
-
-        return None
 
     def draw_objects(self, screen):
         # Rysowanie warstwowe (Proca Tył -> Ptak -> Proca Przód)

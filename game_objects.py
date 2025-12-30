@@ -16,6 +16,11 @@ class GameObject:
     def load_image(self, img_path, img_size=None):
         return helpers.load_image(img_path, img_size)
 
+    def update(self):
+        pos_x = int(self._body.position.x)
+        pos_y = int(self._body.position.y)
+        self._object_rect.center = (pos_x, pos_y)
+
     def draw(self, screen):
         screen.blit(self._image, self._object_rect)
 
@@ -56,6 +61,52 @@ class Slingshot(GameObject):
         pygame.draw.line(screen, self._rubber_color, right_fork,
                          projectile_pos, self._rubber_width)
 
+    def draw(self, screen):
+        screen.blit(self._image, self._object_rect)
+
+
+class Structure(GameObject):
+    def __init__(self, space, object_data):
+        self._name = object_data['name']
+        self._mass = object_data['mass']
+        self._width = object_data['width']
+        self._height = object_data['height']
+        self._size = (self._width, self._height)
+
+        position = (object_data['pos_x'], object_data['pos_y'])
+        self._starting_pos = position
+
+        self._img_path = object_data['img_path']
+        self._create_physics(space)
+        super().__init__(self._starting_pos, self._size, self._img_path)
+
+    def _create_physics(self, space):
+        # oblicza moment bezwladności
+        self._moment = pymunk.moment_for_box(self._mass, self._size)
+        self._body = pymunk.Body(self._mass, self._moment, pymunk.Body.DYNAMIC)
+        self._body.position = self._starting_pos
+        self._shape = pymunk.Poly.create_box(self._body, self._size)
+        self._shape.friction = 0.5
+        self._shape.elasticity = 0.1
+        space.add(self._body, self._shape)
+
+    def draw(self, screen):
+        p = self._body.position
+
+        # Konwersja lokalnych wierzchołków Pymunk na świat gry
+        # self._shape to Poly
+        points = []
+        for v_local in self._shape.get_vertices():
+            # Obrót i przesunięcie punktu
+            v_rot = v_local.rotated(self._body.angle)
+            p_world = p + v_rot
+            points.append(p_world)
+
+        # Rysujemy wielokąt (polygon) łączący te 4 punkty
+        pygame.draw.polygon(screen, (139, 69, 19), points)
+        # Opcjonalnie czarna obwódka
+        pygame.draw.polygon(screen, (0, 0, 0), points, 2)
+
 
 class Projectile(GameObject):
     def __init__(self, space, object_data, position):
@@ -65,17 +116,21 @@ class Projectile(GameObject):
         self._starting_pos = position
         self._img_path = object_data['img_path']
 
-        self._create_object(space)
+        self._create_physics(space)
         diameter = int(2*self._shape.radius)
         self._size = (diameter, diameter)
         super().__init__(self._starting_pos, self._size, self._img_path)
 
-    def _create_object(self, space):
+    def _create_physics(self, space):
         # oblicza moment bezwladności
-        self._moment = pymunk.moment_for_circle(self._mass, 0, self._radius)
+        self._moment = 999990
         self._body = pymunk.Body(self._mass, self._moment, pymunk.Body.STATIC)
         self._body.position = self._starting_pos
         self._shape = pymunk.Circle(self._body, self._radius)
+
+        self._shape.friction = 1.0
+        self._shape.elasticity = 0.6
+
         space.add(self._body, self._shape)
 
     def launch(self, impulse_vector):
@@ -121,9 +176,18 @@ class Projectile(GameObject):
         else:
             return False
 
-    def drag(self):
-        pos = (pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
-        self._body.position = pos
+    def drag(self, slingshot_pos, max_distance):
+        mouse_x = pygame.mouse.get_pos()[0]
+        mouse_y = pygame.mouse.get_pos()[1]
+        sling_x = slingshot_pos[0]
+        sling_y = slingshot_pos[1]
+
+        vector = pygame.Vector2(mouse_x - sling_x, mouse_y - sling_y)
+        if vector.length() > max_distance:
+            vector.scale_to_length(max_distance)
+
+        new_pos = pygame.Vector2(slingshot_pos) + vector
+        self._body.position = tuple(new_pos)
 
     def body(self):
         return self._body
@@ -153,10 +217,27 @@ class Projectile(GameObject):
         # Zwracamy jako krotkę (x, y)
         return (anchor_vector.x, anchor_vector.y)
 
-    def update(self):
-        pos_x = int(self._body.position.x)
-        pos_y = int(self._body.position.y)
-        self._object_rect.center = (pos_x, pos_y)
 
-    def draw(self, screen):
-        screen.blit(self._image, self._object_rect)
+class Ground:
+    def __init__(self, screen_size: pygame.Vector2, y_pos: int, space) -> None:
+        self._width = 3 * screen_size[0]
+        self._y_pos = y_pos
+
+        self._start_point = (-200, self._y_pos)
+        self._end_point = (self._width, self._y_pos)
+        self._create_physics(space)
+
+    def _create_physics(self, space):
+        self._body = space.static_body
+
+        self._shape = pymunk.Segment(self._body, self._start_point,
+                                     self._end_point, 5)
+
+        # Właściwości fizyczne
+        # Maksymalne tarcie (żeby elementy się nie ślizgały jak na lodzie)
+        self._shape.friction = 1.0
+
+        # Mała sprężystość (żeby nie odbijały się jak guma)
+        self._shape.elasticity = 0.1
+
+        space.add(self._shape)
