@@ -5,12 +5,28 @@ import math
 
 
 class GameObject:
-    def __init__(self, pos, size, img_path):
-        helpers.check_size(size)
-        self._image = self.load_image(img_path, size)
-        self._original_image = self._image
+    def __init__(self, object_data: dict) -> None:
+        self._name = object_data['name']
+        self._img_path = object_data['img_path']
+
+        if 'height' in object_data.keys():
+            self._height = int(object_data['height'])
+            self._image = self.load_image(self._img_path, self._height)
+            self._width = self._image.get_width()
+            self._size = (self._width, self._height)
+        else:
+            self._radius = int(object_data['radius'])
+            diameter = int(2*self._radius)
+            self._size = (diameter, diameter)
+
+            helpers.check_size(self._size)
+            self._image = self.load_image(self._img_path, self._size)
+
         self._object_rect = self._image.get_rect()
-        self._object_rect.center = pos
+        self._object_rect.center = self._pos
+
+    def name(self) -> str:
+        return self._name
 
     def position(self):
         return self._object_rect.center
@@ -18,7 +34,7 @@ class GameObject:
     def load_image(self, img_path, img_size=None):
         return helpers.load_image(img_path, img_size)
 
-    def update(self, objects_to_kill: list = None):
+    def update(self, objects_to_kill: list = None) -> None:
         pos_x = int(self._body.position.x)
         pos_y = int(self._body.position.y)
         self._object_rect.center = (pos_x, pos_y)
@@ -27,11 +43,56 @@ class GameObject:
         screen.blit(self._image, self._object_rect)
 
 
+class Slingshot(GameObject):
+    def __init__(self, data):
+        object_data = data['slingshot']
+        self._pos = (object_data['pos_x'], object_data['pos_y'])
+        super().__init__(object_data)
+
+        self._rubber_color = (object_data['color_R'], object_data['color_G'],
+                              object_data['color_B'])
+        self._rubber_width = object_data['rubber_width']
+
+        self._left_fork_offset = pygame.math.Vector2(self._width / -4.15,
+                                                     self._height / -3)
+        self._right_fork_offset = pygame.math.Vector2(self._width / 4.15,
+                                                      self._height / -2.6)
+
+    def get_height(self):
+        return self._height
+
+    def draw_outer_rubber(self, screen, projectile_pos=None):
+        left_fork = self._pos + self._left_fork_offset
+        if projectile_pos is None:
+            right_fork = self._pos + self._right_fork_offset
+            pygame.draw.line(screen, self._rubber_color, left_fork,
+                             right_fork, self._rubber_width)
+        else:
+            pygame.draw.line(screen, self._rubber_color, left_fork,
+                             projectile_pos, self._rubber_width)
+
+    def draw_inner_rubber(self, screen, projectile_pos):
+        right_fork = self._pos + self._right_fork_offset
+        pygame.draw.line(screen, self._rubber_color, right_fork,
+                         projectile_pos, self._rubber_width)
+
+
 class PhysicalObject(GameObject):
-    def __init__(self, pos, size, img_path):
-        super().__init__(pos, size, img_path)
+    def __init__(self, space, object_data):
+        self._space = space
+        self._mass = object_data['mass']
+
+        if object_data['health'] == 'inf':
+            self._health = math.inf
+        else:
+            self._health = object_data['health']
+
+        super().__init__(object_data)
         self._score = 0
-        self._max_x = pos[0] + 100
+        self._max_x = self._pos[0] + 100
+        self._original_image = self._image
+
+        self._last_velocity = pygame.Vector2(0, 0)
 
     def collect_points(self) -> int:
         points = self._score
@@ -54,8 +115,32 @@ class PhysicalObject(GameObject):
     def velocity(self):
         return self._body.velocity
 
-    def name(self) -> str:
-        return self._name
+    def update(self, objects_to_kill: list = None):
+        super().update()
+        if objects_to_kill is None:
+            return None
+        if self in objects_to_kill:
+            return objects_to_kill
+
+        current_velocity = self._body.velocity
+        impact_velocity = current_velocity - self._last_velocity
+        self._last_velocity = pygame.Vector2(current_velocity.x,
+                                             current_velocity.y)
+
+        impact_force = impact_velocity.length
+        DAMAGE_THRESHOLD = 20
+
+        if impact_force > DAMAGE_THRESHOLD:
+            damage_to_deal = impact_force * 0.3
+            self._take_damage(damage_to_deal)
+
+        if self._body.position.x > self._max_x:
+            self._health = 0
+            self._score += 700
+
+        if self._health == 0:
+            objects_to_kill.append(self)
+        return objects_to_kill
 
     def draw(self, screen: pygame.Surface) -> None:
         angle = self._body.angle
@@ -67,66 +152,20 @@ class PhysicalObject(GameObject):
         self._max_x = screen.get_width()
 
 
-class Slingshot(GameObject):
-    def __init__(self, data):
-        object_data = data['slingshot']
-        self._name = object_data['name']
-        self._height = object_data['height']
-        self._width = self._height / 1.54
-        self._size = (self._width, self._height)
-        self._pos = (object_data['pos_x'], object_data['pos_y'])
-
-        self._rubber_color = (object_data['color_R'], object_data['color_G'],
-                              object_data['color_B'])
-        self._rubber_width = object_data['rubber_width']
-        self._img_path = object_data['img_path']
-
-        self._left_fork_offset = pygame.math.Vector2(self._width / -4.15,
-                                                     self._height / -3)
-        self._right_fork_offset = pygame.math.Vector2(self._width / 4.15,
-                                                      self._height / -2.6)
-
-        super().__init__(self._pos, self._size, self._img_path)
-
-    def height(self):
-        return self._height
-
-    def draw_outer_rubber(self, screen, projectile_pos=None):
-        left_fork = self._pos + self._left_fork_offset
-        if projectile_pos is None:
-            right_fork = self._pos + self._right_fork_offset
-            pygame.draw.line(screen, self._rubber_color, left_fork,
-                             right_fork, self._rubber_width)
-        else:
-            pygame.draw.line(screen, self._rubber_color, left_fork,
-                             projectile_pos, self._rubber_width)
-
-    def draw_inner_rubber(self, screen, projectile_pos):
-        right_fork = self._pos + self._right_fork_offset
-        pygame.draw.line(screen, self._rubber_color, right_fork,
-                         projectile_pos, self._rubber_width)
-
-
 class Structure(PhysicalObject):
     def __init__(self, space, object_data):
-        self._name = object_data['name']
+        self._pos = (object_data['pos_x'], object_data['pos_y'])
+        super().__init__(space, object_data)
         self._mass = object_data['mass']
-        self._width = object_data['width']
-        self._height = object_data['height']
-        self._size = (self._width, self._height)
-
-        position = (object_data['pos_x'], object_data['pos_y'])
-        self._starting_pos = position
 
         self._img_path = object_data['img_path']
         self._create_physics(space)
-        super().__init__(self._starting_pos, self._size, self._img_path)
 
     def _create_physics(self, space):
         # oblicza moment bezwladności
         self._moment = pymunk.moment_for_box(self._mass, self._size)
         self._body = pymunk.Body(self._mass, self._moment, pymunk.Body.DYNAMIC)
-        self._body.position = self._starting_pos
+        self._body.position = self._pos
         self._shape = pymunk.Poly.create_box(self._body, self._size)
 
         self._shape.friction = 0.5
@@ -134,6 +173,11 @@ class Structure(PhysicalObject):
         self._shape.game_object = self
 
         space.add(self._body, self._shape)
+
+    def update(self, objects_to_kill: list = None):
+        if objects_to_kill is None:
+            raise ValueError('update() method requires objects_to_kill_list')
+        return super().update(objects_to_kill)
 
     def draw(self, screen):
         p = self._body.position
@@ -155,21 +199,12 @@ class Structure(PhysicalObject):
 
 class Enemy(PhysicalObject):
     def __init__(self, space, object_data):
-        self._name = object_data['name']
-        self._mass = object_data['mass']
-        self._img_path = object_data['img_path']
         self._pos = (object_data['pos_x'], object_data['pos_y'])
-        self._health = object_data['health']
+        super().__init__(space, object_data)
 
-        self._height = object_data['height']
-        self._width = object_data['width']
-        self._size = (self._width, self._height)
-        self._space = space
+        self._mass = object_data['mass']
 
         self._create_physics(space)
-        self._last_velocity = pygame.Vector2(0, 0)
-
-        super().__init__(self._pos, self._size, self._img_path)
 
     def _create_physics(self, space):
         # oblicza moment bezwladności
@@ -185,29 +220,8 @@ class Enemy(PhysicalObject):
     def update(self, objects_to_kill: list = None):
         if objects_to_kill is None:
             raise ValueError('update() method requires objects_to_kill_list')
-        super().update()
-
-        if self in objects_to_kill:
-            return objects_to_kill
 
         contacts = self._space.shape_query(self._shape)
-
-        current_velocity = self._body.velocity
-        impact_velocity = current_velocity - self._last_velocity
-        self._last_velocity = pygame.Vector2(current_velocity.x,
-                                             current_velocity.y)
-
-        impact_force = impact_velocity.length
-        DAMAGE_THRESHOLD = 20
-
-        if impact_force > DAMAGE_THRESHOLD:
-            damage_to_deal = impact_force * 0.3
-            self._take_damage(damage_to_deal)
-
-        if self._body.position.x > self._max_x:
-            self._health = 0
-            self._score += 700
-
         for contact in contacts:
             other_shape = contact.shape
             if hasattr(other_shape, 'game_object'):
@@ -217,31 +231,25 @@ class Enemy(PhysicalObject):
                     self._health = 0
                     self._score += 1000
 
-        if self._health == 0:
-            objects_to_kill.append(self)
-        return objects_to_kill
+        return super().update(objects_to_kill)
 
 
 class Projectile(PhysicalObject):
     def __init__(self, space, object_data, position):
-        self._name = object_data['name']
         self._mass = object_data['mass']
-        self._radius = object_data['radius']
-        self._starting_pos = position
-        self._img_path = object_data['img_path']
+
+        self._pos = position
+        super().__init__(space, object_data)
         self._score = object_data['score']
         self._pull_vector = pygame.Vector2(0, 0)
 
         self._create_physics(space)
-        diameter = int(2*self._shape.radius)
-        self._size = (diameter, diameter)
-        super().__init__(self._starting_pos, self._size, self._img_path)
 
     def _create_physics(self, space):
         # oblicza moment bezwladności
         self._moment = 999990
         self._body = pymunk.Body(self._mass, self._moment, pymunk.Body.STATIC)
-        self._body.position = self._starting_pos
+        self._body.position = self._pos
         self._shape = pymunk.Circle(self._body, self._radius)
 
         self._shape.friction = 1.0
@@ -256,13 +264,13 @@ class Projectile(PhysicalObject):
         self._body.moment = self._moment
 
         self._body.apply_impulse_at_local_point(impulse_vector)
-        start_vec = pygame.math.Vector2(self._starting_pos)
+        start_vec = pygame.math.Vector2(self._pos)
         current_vec = pygame.math.Vector2(self.position())
 
         self._pull_vector = current_vec - start_vec
 
     def go_to_start_pos(self):
-        self._body.position = self._starting_pos
+        self._body.position = self._pos
 
     def is_dragged(self) -> bool:
         if pygame.mouse.get_pressed()[0]:
@@ -278,7 +286,7 @@ class Projectile(PhysicalObject):
         # elif self._body.body_type == pymunk.Body.DYNAMIC:
         #     return False
 
-        slingshot_center = pygame.math.Vector2(self._starting_pos)
+        slingshot_center = pygame.math.Vector2(self._pos)
         current_pos = pygame.math.Vector2(self.position())
         current_vector = current_pos - slingshot_center
 
@@ -320,7 +328,7 @@ class Projectile(PhysicalObject):
 
     def get_rubber_anchor(self):
         projectile_center = pygame.math.Vector2(self.position())
-        slingshot_center = pygame.math.Vector2(self._starting_pos)
+        slingshot_center = pygame.math.Vector2(self._pos)
 
         # Obliczamy wektor kierunku: Od Ptaka -> Do Procy
         direction = slingshot_center - projectile_center

@@ -1,3 +1,38 @@
 {
-    "background_img": "assets/images/Title_Screen.png"
+    "background_img": "assets/images/Title_Screen.png",
+    "buttons_spacing": 300,
+    "objects":{
+        "buttons":[
+            {
+                "name": "play_menu_button",
+                "radius": 88,
+                "y_pos": 470,
+                "img_path": "assets/images/Title_Screen_button.png",
+                "font_path": "assets/fonts/Dalek.ttf",
+                "font_size": 35,
+                "text": "PLAY",
+                "offset": -300
+            },
+            {
+                "name": "options_menu_button",
+                "radius": 88,
+                "y_pos": 470,
+                "img_path": "assets/images/Title_Screen_button.png",
+                "font_path": "assets/fonts/Dalek.ttf",
+                "font_size": 35,
+                "text": "OPTIONS",
+                "offset": 0
+            },
+            {
+                "name": "quit_menu_button",
+                "radius": 88,
+                "y_pos": 470,
+                "img_path": "assets/images/Title_Screen_button.png",
+                "font_path": "assets/fonts/Dalek.ttf",
+                "font_size": 35,
+                "text": "QUIT",
+                "offset": 300
+            }
+        ]
+    }
 }

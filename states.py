@@ -9,18 +9,60 @@ import math
 
 
 class State:
-    def __init__(self, screen_size):
+    def __init__(self, screen_size, data):
         self._screen_size = screen_size
+        if 'text' in data:
+            self._text_offset = data['text_offset']
+            self._font_path = data['font_path']
+            self._font_size = data['font_size']
+            self._font = helpers.initialize_font(self._font_path,
+                                                 self._font_size)
+            self._initial_text = data['text']
+            text_color_R = data['text_color_R']
+            text_color_G = data['text_color_G']
+            text_color_B = data['text_color_B']
+            self._text_color = (text_color_R, text_color_G, text_color_B)
 
-    def _set_background(self, data):
-        background_img_path = data["background_img"]
-        self._background_image = self.load_image(
-            background_img_path)
+        self._buttons_dict = {}
+        self._objects = self._initialize_objects(data)
+
+    def _initialize_objects(self, data):
+        data = data['objects']
+        self._buttons = self._initialize_buttons(self._screen_size, data)
+        return self._buttons
+
+    def _initialize_buttons(self, screen_size, data):
+        center_x = screen_size[0] * 0.5
+        object_data = data['buttons']
+
+        created_buttons = []
+        for obj in object_data:
+            if 'text' in obj.keys():
+                button = buttons.TextButton(obj, center_x)
+            else:
+                button = buttons.Button(obj, center_x)
+
+            created_buttons.append(button)
+            self._buttons_dict[button.name()] = button
+        return created_buttons
+
+    def _draw_text(self, text, position):
+        self._text_surface = self._font.render(text, True,
+                                               self._text_color)
+        self._text_rect = self._text_surface.get_rect()
+        self._text_rect.center = position
+
+    def _set_background(self, img_path):
+        self._background_image = self.load_image(img_path)
 
     def load_image(self, img_path, img_size=None):
         if img_size is None:
             img_size = self._screen_size
         return helpers.load_image(img_path, img_size)
+
+    def _draw_objects(self, screen):
+        for obj in self._objects:
+            obj.draw(screen)
 
     def update(self, events):
         return self
@@ -32,40 +74,23 @@ class State:
 
 class MainMenuState(State):
     def __init__(self, screen_size):
-        super().__init__(screen_size)
-        self.pressed_keys = []
-
         with open('objects_config_files/menu.json') as file_handle:
             data = json.load(file_handle)
-            self._set_background(data)
-        self.create_buttons(screen_size)
+            super().__init__(screen_size, data)
+            self._create_buttons()
+            background_img_path = data["background_img"]
+            self._set_background(background_img_path)
 
-    def create_buttons(self, screen_size):
-        y_pos = 470
-        center_x = screen_size[0] * 0.5
-        spacing = 300
-        size = pygame.Vector2(175, 175)
-        path = 'assets/images/Title_Screen_button.png'
-        font_path = 'assets/fonts/Dalek.ttf'
-        font_size = 35
-
-        pos = pygame.Vector2(center_x - spacing, y_pos)
-        self._play_button = buttons.Button(pos, size, path)
-        self._play_button.add_text('PLAY', font_path, font_size)
-
-        pos = pygame.Vector2(center_x, y_pos)
-        self._settings_button = buttons.Button(pos, size, path)
-        self._settings_button.add_text('OPTIONS', font_path, font_size)
-
-        pos = pygame.Vector2(center_x + spacing, y_pos)
-        self._quit_button = buttons.Button(pos, size, path)
-        self._quit_button.add_text('QUIT', font_path, font_size)
+    def _create_buttons(self):
+        self._play_button = self._buttons_dict['play_menu_button']
+        self._options_button = self._buttons_dict['options_menu_button']
+        self._quit_button = self._buttons_dict['quit_menu_button']
 
     def update(self, events):
         next_state = self
         if self._play_button.is_clicked(events):
             next_state = GameState(self._screen_size, 1)
-        elif self._settings_button.is_clicked(events):
+        elif self._options_button.is_clicked(events):
             pass
             new_event = pygame.event.Event(pygame.KEYDOWN)
             new_event.key = pygame.K_F11
@@ -78,47 +103,54 @@ class MainMenuState(State):
 
     def draw(self, screen):
         super().draw(screen)
-        self._play_button.draw(screen)
-        self._settings_button.draw(screen)
-        self._quit_button.draw(screen)
+        self._draw_objects(screen)
 
 
 class GameState(State):
-    def __init__(self, screen_size, level):
-        super().__init__(screen_size)
-        self._level = level
+    def __init__(self, screen_size, level: int):
+        if not isinstance(level, int):
+            raise ValueError('Level must be an integer')
         self._ammo_pointer = 0
-
+        self._level = level
         self._space = pymunk.Space()
-        self._space.gravity = (50, 900)
 
-        self._slingshot_pos = (700, 800)
-        self._high_score = 0
-        self._current_score = 0
-        self._objects = self._initialize_objects()
-        self._max_dis = self._slingshot._height * 0.8
-
-        self._object_on_sling = self._current_projectile
-        self._dragged_object = None
-        self._ground = Ground(self._screen_size, 920, self._space)
-
-    def _initialize_objects(self):
         path = f'objects_config_files/level{self._level}.json'
         with open(path, 'r') as file_handle:
             data = json.load(file_handle)
-            self._set_background(data)
+            super().__init__(screen_size, data)
+            self._space.gravity = (data['gravity_x'], data['gravity_y'])
             self._high_score = data['high_score']
+            background_img_path = data["background_img"]
+            self._set_background(background_img_path)
 
-            self._slingshot = Slingshot(data)
-            slingshot_x = self._slingshot.position()[0]
-            slingshot_y = self._slingshot.position()[1] - 95
-            self._slingshot_pos = (slingshot_x, slingshot_y)
+        self._current_score = 0
+        self._max_dis = self._slingshot.get_height() * 0.8
 
-            self._projectiles_data = data['projectiles']
-            self._current_projectile = self._initialize_projectile()
-            self._enemies = self._initialize_enemies(data)
-            self._structures = self._initialize_structures(data)
-        return [self._current_projectile] + self._structures + self._enemies
+        self._object_on_sling = self._current_projectile
+        self._dragged_object = None
+
+        self._projectile_stopped = False
+        self._level_ended = False
+        self._timer = 0
+        self._wait_time = 2.0
+        # 0 - porażka, 1 - zwycięstwo
+        self._result = 0
+        self._ground = Ground(self._screen_size, 920, self._space)
+
+    def _initialize_objects(self, data):
+        objects = super()._initialize_objects(data)
+        data = data['objects']
+        self._slingshot = Slingshot(data)
+        slingshot_x = self._slingshot.position()[0]
+        slingshot_y = self._slingshot.position()[1] - 95
+        self._slingshot_pos = (slingshot_x, slingshot_y)
+
+        self._projectiles_data = data['projectiles']
+        self._current_projectile = self._initialize_projectile()
+        objects.append(self._current_projectile)
+        self._enemies = self._initialize_enemies(data)
+        self._structures = self._initialize_structures(data)
+        return objects + self._enemies + self._structures
 
     def _initialize_projectile(self) -> Projectile:
         data = self._projectiles_data[self._ammo_pointer]
@@ -170,20 +202,18 @@ class GameState(State):
         elif not pygame.mouse.get_pressed()[0]:
             self._dragged_object = None
 
-    def draw_objects(self, screen):
+    def _draw_objects(self, screen):
         # Rysowanie warstwowe (Proca Tył -> Ptak -> Proca Przód)
         if self._object_on_sling is not None:
             rubber_anchor = self._object_on_sling.get_rubber_anchor()
             self._slingshot.draw_inner_rubber(screen,
                                               rubber_anchor)
-            for object in self._objects:
-                object.draw(screen)
+            super()._draw_objects(screen)
             self._slingshot.draw_outer_rubber(screen,
                                               rubber_anchor)
         else:
             self._slingshot.draw_outer_rubber(screen)
-            for object in self._objects:
-                object.draw(screen)
+            super()._draw_objects(screen)
 
     def _kill_object(self, obj_to_remove: PhysicalObject) -> None:
         space_bodies = self._space.bodies
@@ -191,14 +221,32 @@ class GameState(State):
             self._space.remove(obj_to_remove._body, obj_to_remove._shape)
         if obj_to_remove in self._objects:
             self._objects.remove(obj_to_remove)
+        if type(obj_to_remove).__name__ == 'Enemy':
+            self._enemies.remove(obj_to_remove)
 
     def _end_level(self):
-        print(f'Final score : {self._current_score}')
+        if self._enemies:
+            self._current_score = 0
+            self._result = 0
+            self._result = 0
+        else:
+            points = (len(self._projectiles_data) - self._ammo_pointer) * 1500
+            self._current_score += points
+            self._result = 1
+        self._timer = 0
+        self._level_ended = True
 
-    def update(self, events):
+    def _create_end_game_state(self) -> State:
+        return LevelCompleteState(self._screen_size,
+                                  self._current_score,
+                                  self._level,
+                                  self._result)
+
+    def update(self, events: list) -> State:
         self._space.step(1/60)
 
-        self._check_for_launch(events)
+        if not self._level_ended:
+            self._check_for_launch(events)
 
         if self._current_projectile.is_on_sling(self._slingshot_pos,
                                                 self._max_dis):
@@ -207,43 +255,123 @@ class GameState(State):
             self._object_on_sling = None
 
         objects_to_kill = []
-        for object in self._objects:
-            if type(object).__name__ == 'Enemy':
-                objects_to_kill = object.update(objects_to_kill)
+        for obj in self._objects:
+            killable_objects = ['Enemy', 'Structure']
+            if type(obj).__name__ in killable_objects:
+                objects_to_kill = obj.update(objects_to_kill)
+                self._current_score += obj.collect_points()
             else:
-                object.update()
+                obj.update()
 
-            if hasattr(object, 'collect_points'):
-                self._current_score += object.collect_points()
-
-        for object in objects_to_kill:
-            self._kill_object(object)
+        for obj in objects_to_kill:
+            self._kill_object(obj)
         self._high_score = max(self._high_score, self._current_score)
+
+        if not self._enemies and not self._level_ended:
+            self._end_level()
 
         if not self._current_projectile.is_on_sling(self._slingshot_pos,
                                                     self._max_dis):
-
-            real_velocity = pygame.Vector2(self._current_projectile.velocity()).length()
-            is_stopped = real_velocity < 2
-            is_off_screen = self._current_projectile.off_screen(
+            if not self._projectile_stopped:
+                real_velocity = pygame.Vector2(
+                    self._current_projectile.velocity()).length()
+                is_stopped = real_velocity < 4
+                is_off_screen = self._current_projectile.off_screen(
                                                             self._screen_size)
-            if is_stopped or is_off_screen:
+
+                if is_stopped or is_off_screen:
+                    self._projectile_stopped = True
+                    self._timer = 0
+
+            self._timer += 1/60
+            if self._projectile_stopped and self._timer >= 2:
                 self._ammo_pointer += 1
                 self._kill_object(self._current_projectile)
                 if self._ammo_pointer >= len(self._projectiles_data):
-                    self._end_level()
+                    if not self._level_ended:
+                        self._end_level()
                 else:
                     self._current_projectile = self._initialize_projectile()
                     self._objects.append(self._current_projectile)
+                    self._projectile_stopped = False
+                    self._timer = 0
 
         for event in events:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 # Zapauzowanie gry i wyświetlenie menu
                 pass
-        return self
+
+        next_state = self
+        if self._level_ended:
+            self._timer += 1/60  # Dodajemy czas jednej klatki
+            if self._timer >= self._wait_time:
+                next_state = self._create_end_game_state()
+        return next_state
 
     def draw(self, screen):
         # Czyści ekran
         super().draw(screen)
-        self.draw_objects(screen)
+
+        text = self._initial_text + f'  {self._current_score:<4}'
+        pos = (self._screen_size[0] - self._text_offset, self._text_offset)
+        self._draw_text(text, pos)
+        self._text_rect.topright = pos
+        if self._text_surface is not None:
+            screen.blit(self._text_surface, self._text_rect)
+
+        self._draw_objects(screen)
         self._slingshot.draw(screen)
+
+
+class LevelCompleteState(State):
+    def __init__(self, screen_size, score: int, level: int, result: int):
+        self._score = score
+        self._level = level
+        if result not in [0, 1]:
+            raise ValueError('Attr result has incorrect value')
+        self._result = result
+
+        path = 'objects_config_files/level_summary.json'
+        with open(path, 'r') as file_handle:
+            data = json.load(file_handle)
+            super().__init__(screen_size, data)
+            self._create_buttons()
+
+    def _create_buttons(self):
+        self._play_button = self._buttons_dict['play_button']
+        self._retry_button = self._buttons_dict['retry_button']
+        self._quit_button = self._buttons_dict['quit_button']
+
+    def update(self, events):
+        next_state = self
+        if self._play_button.is_clicked(events):
+            if self._score > 0:
+                next_state = GameState(self._screen_size, 1)
+        elif self._retry_button.is_clicked(events):
+            next_state = GameState(self._screen_size, self._level)
+        elif self._quit_button.is_clicked(events):
+            next_state = MainMenuState(self._screen_size)
+        return next_state
+
+    def draw(self, screen):
+        middle_x = self._screen_size[0] / 2
+        middle_y = self._screen_size[1] / 2
+        x_offset = 450
+        y_offset = 450
+
+        left_top = (middle_x - x_offset, middle_y - y_offset)
+        right_top = (middle_x + x_offset, middle_y - y_offset)
+        left_bottom = (middle_x - x_offset, middle_y + y_offset)
+        right_bottom = (middle_x + x_offset, middle_y + y_offset)
+
+        BLACK = (0, 0, 0)
+        points = [left_top, right_top, right_bottom, left_bottom]
+        pygame.draw.polygon(screen, BLACK, points)
+
+        text = self._initial_text + f'  {self._score:^4}'
+        position = (middle_x, middle_y - self._text_offset)
+        self._draw_text(text, position)
+        if self._text_surface is not None:
+            screen.blit(self._text_surface, self._text_rect)
+
+        self._draw_objects(screen)

@@ -1,55 +1,71 @@
 {
     "background_img": "assets/images/Level1_bg.png",
+    "gravity_x": 0,
+    "gravity_y": 900,
     "high_score": 0,
-    "slingshot":{
-        "name": "slingshot",
-        "height": 300,
-        "pos_x": 260,
-        "pos_y": 770,
-        "color_R": 169,
-        "color_G": 64,
-        "color_B": 58,
-        "rubber_width": 7,
-        "img_path": "assets/images/slingshot.png"
-    },
-    "projectiles":[
-        {
-            "name": "rock",
-            "mass": 1,
-            "radius":32,
-            "img_path": "assets/images/rock.png",
-            "score": 2000
+    "font_path": "assets/fonts/Dalek.ttf",
+    "font_size": 70,
+    "text": "SCORE:",
+    "text_offset": 25,
+    "text_color_R": 235,
+    "text_color_G": 213,
+    "text_color_B": 174,
+    "objects":{
+        "slingshot":{
+            "name": "slingshot",
+            "height": 300,
+            "pos_x": 260,
+            "pos_y": 770,
+            "color_R": 169,
+            "color_G": 64,
+            "color_B": 58,
+            "rubber_width": 7,
+            "img_path": "assets/images/slingshot.png"
         },
-        {
-            "name": "kam",
-            "mass": 1,
-            "radius":32,
-            "img_path": "assets/images/rock.png",
-            "score": 2000
-        }
-    ],
-    "enemies":[
-        {
-            "name": "goblin_1",
-            "mass": 1,
-            "health": 100,
-            "height": 150,
-            "width": 113,
-            "pos_x": 800,
-            "pos_y": 870,
-            "img_path": "assets/images/normal_goblin.png"
-        }
-    ],
-    "structures":[
-        {
-            "name": "wall",
-            "mass": 3,
-            "health": 50,
-            "width": 50,
-            "height":150,
-            "pos_x": 600,
-            "pos_y": 50,
-            "img_path": "assets/images/rock.png"
-        }
-    ]
+        "projectiles":[
+            {
+                "name": "rock",
+                "mass": 1,
+                "health": "inf",
+                "radius":32,
+                "img_path": "assets/images/rock.png",
+                "score": 2000
+            },
+            {
+                "name": "kam",
+                "mass": 1,
+                "health": "inf",
+                "radius":32,
+                "img_path": "assets/images/rock.png",
+                "score": 2000
+            }
+        ],
+        "enemies":[
+            {
+                "name": "goblin_1",
+                "mass": 1,
+                "health": 300,
+                "height": 150,
+                "width": 113,
+                "pos_x": 800,
+                "pos_y": 870,
+                "img_path": "assets/images/normal_goblin.png"
+            }
+        ],
+        "structures":[
+            {
+                "name": "wall",
+                "mass": 3,
+                "health": 1000,
+                "width": 50,
+                "height":150,
+                "pos_x": 600,
+                "pos_y": 50,
+                "img_path": "assets/images/rock.png"
+            }
+        ],
+        "buttons":[
+
+        ]
+    }
 }

@@ -1,0 +1,35 @@
+{
+    "buttons_spacing": 300,
+    "font_path": "assets/fonts/Dalek.ttf",
+    "font_size": 100,
+    "text": "SCORE:",
+    "text_offset": 130,
+    "text_color_R": 235,
+    "text_color_G": 213,
+    "text_color_B": 174,
+    "objects":{
+        "buttons":[
+            {
+                "name": "play_button",
+                "radius": 88,
+                "y_pos": 700,
+                "img_path": "assets/images/play_button.png",
+                "offset": -300
+            },
+            {
+                "name": "retry_button",
+                "radius": 88,
+                "y_pos": 700,
+                "img_path": "assets/images/retry_button.png",
+                "offset": 0
+            },
+            {
+                "name": "quit_button",
+                "radius": 88,
+                "y_pos": 700,
+                "img_path": "assets/images/quit_button.png",
+                "offset": 300
+            }
+        ]
+    }
+}

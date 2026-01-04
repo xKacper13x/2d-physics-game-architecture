@@ -30,7 +30,15 @@ def load_image(img_path, img_size=None):
 
     if img_size is not None:
         check_size(img_size)
-        image = pygame.transform.scale(image, img_size)
+        # Podano tylko wysokość
+        if isinstance(img_size, int):
+            height = img_size
+            ratio = image.get_width() / image.get_height()
+            width = ratio * height
+            final_img_size = (width, height)
+        else:
+            final_img_size = img_size
+        image = pygame.transform.scale(image, final_img_size)
     return image
 
 
