@@ -9,11 +9,16 @@ class GameObject:
         self._name = object_data['name']
         self._img_path = object_data['img_path']
 
-        if 'height' in object_data.keys():
+        if 'height' in object_data:
             self._height = int(object_data['height'])
-            self._image = self.load_image(self._img_path, self._height)
-            self._width = self._image.get_width()
-            self._size = (self._width, self._height)
+            if 'width' in object_data:
+                self._width = int(object_data['width'])
+                self._size = (self._width, self._height)
+                self._image = self.load_image(self._img_path, self._size)
+            else:
+                self._image = self.load_image(self._img_path, self._height)
+                self._width = self._image.get_width()
+                self._size = (self._width, self._height)
         else:
             self._radius = int(object_data['radius'])
             diameter = int(2*self._radius)
@@ -34,13 +39,11 @@ class GameObject:
     def load_image(self, img_path, img_size=None):
         return helpers.load_image(img_path, img_size)
 
-    def update(self, objects_to_kill: list = None) -> None:
-        pos_x = int(self._body.position.x)
-        pos_y = int(self._body.position.y)
-        self._object_rect.center = (pos_x, pos_y)
-
     def draw(self, screen: pygame.Surface) -> None:
         screen.blit(self._image, self._object_rect)
+
+    def update(self, objects_to_kill: list = None):
+        pass
 
 
 class Slingshot(GameObject):
@@ -116,7 +119,9 @@ class PhysicalObject(GameObject):
         return self._body.velocity
 
     def update(self, objects_to_kill: list = None):
-        super().update()
+        pos_x = int(self._body.position.x)
+        pos_y = int(self._body.position.y)
+        self._object_rect.center = (pos_x, pos_y)
         if objects_to_kill is None:
             return None
         if self in objects_to_kill:
@@ -128,7 +133,7 @@ class PhysicalObject(GameObject):
                                              current_velocity.y)
 
         impact_force = impact_velocity.length
-        DAMAGE_THRESHOLD = 20
+        DAMAGE_THRESHOLD = 1000
 
         if impact_force > DAMAGE_THRESHOLD:
             damage_to_deal = impact_force * 0.3

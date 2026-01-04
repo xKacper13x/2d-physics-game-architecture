@@ -1,11 +1,11 @@
 from game_objects import (Projectile, Slingshot, Structure,
                           Ground, Enemy, PhysicalObject)
-import buttons
 import pygame
 import pymunk
-import helpers
 import json
 import math
+import helpers
+import buttons
 
 
 class State:
@@ -28,29 +28,35 @@ class State:
 
     def _initialize_objects(self, data):
         data = data['objects']
-        self._buttons = self._initialize_buttons(self._screen_size, data)
-        return self._buttons
+        if 'buttons' in data:
+            self._buttons = self._initialize_buttons(data)
+            return self._buttons
+        return []
 
-    def _initialize_buttons(self, screen_size, data):
-        center_x = screen_size[0] * 0.5
+    def _initialize_buttons(self, data):
         object_data = data['buttons']
 
         created_buttons = []
         for obj in object_data:
             if 'text' in obj.keys():
-                button = buttons.TextButton(obj, center_x)
+                button = buttons.TextButton(obj, self._screen_size)
             else:
-                button = buttons.Button(obj, center_x)
+                button = buttons.Button(obj, self._screen_size)
 
             created_buttons.append(button)
             self._buttons_dict[button.name()] = button
         return created_buttons
 
-    def _draw_text(self, text, position):
+    def _draw_text(self, text: str, anchor: str,
+                   position: tuple | pygame.Vector2, screen) -> None:
         self._text_surface = self._font.render(text, True,
                                                self._text_color)
         self._text_rect = self._text_surface.get_rect()
-        self._text_rect.center = position
+
+        setattr(self._text_rect, anchor, position)
+
+        if self._text_surface is not None:
+            screen.blit(self._text_surface, self._text_rect)
 
     def _set_background(self, img_path):
         self._background_image = self.load_image(img_path)
@@ -122,6 +128,7 @@ class GameState(State):
             self._high_score = data['high_score']
             background_img_path = data["background_img"]
             self._set_background(background_img_path)
+            self._create_buttons()
 
         self._current_score = 0
         self._max_dis = self._slingshot.get_height() * 0.8
@@ -133,9 +140,14 @@ class GameState(State):
         self._level_ended = False
         self._timer = 0
         self._wait_time = 2.0
-        # 0 - porażka, 1 - zwycięstwo
-        self._result = 0
+
         self._ground = Ground(self._screen_size, 920, self._space)
+
+    def get_level(self):
+        return self._level
+
+    def _create_buttons(self):
+        self._pause_button = self._buttons_dict['pause_button']
 
     def _initialize_objects(self, data):
         objects = super()._initialize_objects(data)
@@ -189,8 +201,8 @@ class GameState(State):
                 if self._dragged_object is not None:
                     if distance >= 70:
                         self._current_projectile.launch(
-                                                                (dis_x*6.7,
-                                                                 dis_y*6.7))
+                                                                (dis_x*18,
+                                                                 dis_y*18))
                     else:
                         self._current_projectile.go_to_start_pos()
                     self._dragged_object = None
@@ -242,6 +254,17 @@ class GameState(State):
                                   self._level,
                                   self._result)
 
+    def save_high_score(self):
+        path = f'objects_config_files/level{self._level}.json'
+
+        helpers.check_path(path)
+        with open(path, 'r') as file_handle:
+            data = json.load(file_handle)
+        data['high_score'] = self._current_score
+
+        with open(path, 'w') as file_handle:
+            json.dump(data, file_handle, indent=4)
+
     def update(self, events: list) -> State:
         self._space.step(1/60)
 
@@ -265,7 +288,8 @@ class GameState(State):
 
         for obj in objects_to_kill:
             self._kill_object(obj)
-        self._high_score = max(self._high_score, self._current_score)
+        if max(self._high_score, self._current_score) > self._high_score:
+            self.save_high_score()
 
         if not self._enemies and not self._level_ended:
             self._end_level()
@@ -296,10 +320,12 @@ class GameState(State):
                     self._projectile_stopped = False
                     self._timer = 0
 
+        if self._pause_button.is_clicked(events):
+            return PauseState(self._screen_size, self)
+
         for event in events:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                # Zapauzowanie gry i wyświetlenie menu
-                pass
+                return PauseState(self._screen_size, self)
 
         next_state = self
         if self._level_ended:
@@ -314,10 +340,8 @@ class GameState(State):
 
         text = self._initial_text + f'  {self._current_score:<4}'
         pos = (self._screen_size[0] - self._text_offset, self._text_offset)
-        self._draw_text(text, pos)
-        self._text_rect.topright = pos
-        if self._text_surface is not None:
-            screen.blit(self._text_surface, self._text_rect)
+        anchor = 'topright'
+        self._draw_text(text, anchor, pos, screen)
 
         self._draw_objects(screen)
         self._slingshot.draw(screen)
@@ -354,8 +378,7 @@ class LevelCompleteState(State):
         return next_state
 
     def draw(self, screen):
-        middle_x = self._screen_size[0] / 2
-        middle_y = self._screen_size[1] / 2
+        middle_x, middle_y = self._screen_size / 2
         x_offset = 450
         y_offset = 450
 
@@ -370,8 +393,40 @@ class LevelCompleteState(State):
 
         text = self._initial_text + f'  {self._score:^4}'
         position = (middle_x, middle_y - self._text_offset)
-        self._draw_text(text, position)
-        if self._text_surface is not None:
-            screen.blit(self._text_surface, self._text_rect)
+        anchor = 'center'
+        self._draw_text(text, anchor, position, screen)
 
+        self._draw_objects(screen)
+
+
+class PauseState(State):
+    def __init__(self, screen_size: pygame.Vector2, paused_state: State):
+        self._paused_state = paused_state
+        with open('objects_config_files/pause.json') as file_handle:
+            data = json.load(file_handle)
+            super().__init__(screen_size, data)
+            self._create_buttons()
+
+    def _create_buttons(self):
+        self._play_button = self._buttons_dict['play_button']
+        self._retry_button = self._buttons_dict['retry_button']
+        self._settings_button = self._buttons_dict['settings_button']
+        self._quit_button = self._buttons_dict['quit_button']
+
+    def update(self, events):
+        if self._play_button.is_clicked(events):
+            return self._paused_state
+        if self._retry_button.is_clicked(events):
+            return GameState(self._screen_size, self._paused_state.get_level())
+        if self._settings_button.is_clicked(events):
+            pass
+        if self._quit_button.is_clicked(events):
+            return MainMenuState(self._screen_size)
+
+        for event in events:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                return self._paused_state
+        return self
+
+    def draw(self, screen):
         self._draw_objects(screen)

@@ -4,9 +4,27 @@ import helpers
 
 
 class Button(GameObject):
-    def __init__(self, object_data, x_pos):
-        offset = object_data['offset']
-        self._pos = (x_pos + offset, object_data['y_pos'])
+    def __init__(self, object_data, screen_size: pygame.Vector2):
+        screen_w, screen_h = screen_size
+        anchor = object_data.get('anchor', 'center')  # Domyślnie środek
+        off_x = object_data.get('x_offset', 0)
+        off_y = object_data.get('y_offset', 0)
+
+        # Obliczamy punkt bazowy na podstawie kotwicy
+        base_x, base_y = 0, 0
+
+        if anchor == 'center':
+            base_x, base_y = screen_w / 2, screen_h / 2
+        elif anchor == 'top_left':
+            base_x, base_y = 0, 0
+        elif anchor == 'top_right':
+            base_x, base_y = screen_w, 0
+        elif anchor == 'bottom_left':
+            base_x, base_y = 0, screen_h
+        elif anchor == 'bottom_right':
+            base_x, base_y = screen_w, screen_h
+
+        self._pos = (base_x + off_x, base_y + off_y)
         super().__init__(object_data)
 
     def size(self):
@@ -29,8 +47,8 @@ class Button(GameObject):
 
 
 class TextButton(Button):
-    def __init__(self, object_data, x_pos):
-        super().__init__(object_data, x_pos)
+    def __init__(self, object_data, screen_size: pygame.Vector2):
+        super().__init__(object_data, screen_size)
         self._text = object_data['text']
 
         self._text_color = (235, 213, 174)

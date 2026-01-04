@@ -2,16 +2,16 @@
     "background_img": "assets/images/Level1_bg.png",
     "gravity_x": 0,
     "gravity_y": 900,
-    "high_score": 0,
+    "high_score": 7136,
     "font_path": "assets/fonts/Dalek.ttf",
     "font_size": 70,
     "text": "SCORE:",
     "text_offset": 25,
-    "text_color_R": 235,
-    "text_color_G": 213,
-    "text_color_B": 174,
-    "objects":{
-        "slingshot":{
+    "text_color_R": 135,
+    "text_color_G": 113,
+    "text_color_B": 74,
+    "objects": {
+        "slingshot": {
             "name": "slingshot",
             "height": 300,
             "pos_x": 260,
@@ -22,50 +22,85 @@
             "rubber_width": 7,
             "img_path": "assets/images/slingshot.png"
         },
-        "projectiles":[
+        "projectiles": [
             {
                 "name": "rock",
-                "mass": 1,
+                "mass": 3,
                 "health": "inf",
-                "radius":32,
+                "radius": 32,
                 "img_path": "assets/images/rock.png",
                 "score": 2000
             },
             {
                 "name": "kam",
-                "mass": 1,
+                "mass": 3,
                 "health": "inf",
-                "radius":32,
+                "radius": 32,
                 "img_path": "assets/images/rock.png",
                 "score": 2000
             }
         ],
-        "enemies":[
+        "enemies": [
             {
                 "name": "goblin_1",
                 "mass": 1,
                 "health": 300,
                 "height": 150,
-                "width": 113,
-                "pos_x": 800,
-                "pos_y": 870,
+                "pos_x": 1300,
+                "pos_y": 845,
+                "img_path": "assets/images/normal_goblin.png"
+            },
+            {
+                "name": "goblin_2",
+                "mass": 1,
+                "health": 300,
+                "height": 150,
+                "pos_x": 1300,
+                "pos_y": 590,
                 "img_path": "assets/images/normal_goblin.png"
             }
         ],
-        "structures":[
+        "structures": [
+            {
+                "name": "floor",
+                "mass": 2,
+                "health": 10000,
+                "width": 600,
+                "height": 50,
+                "pos_x": 1300,
+                "pos_y": 690,
+                "img_path": "assets/images/rock.png"
+            },
             {
                 "name": "wall",
-                "mass": 3,
-                "health": 1000,
+                "mass": 1,
+                "health": 10000,
                 "width": 50,
-                "height":150,
-                "pos_x": 600,
-                "pos_y": 50,
+                "height": 200,
+                "pos_x": 1200,
+                "pos_y": 820,
+                "img_path": "assets/images/rock.png"
+            },
+            {
+                "name": "wall",
+                "mass": 1,
+                "health": 10000,
+                "width": 50,
+                "height": 200,
+                "pos_x": 1400,
+                "pos_y": 820,
                 "img_path": "assets/images/rock.png"
             }
         ],
-        "buttons":[
-
+        "buttons": [
+            {
+                "name": "pause_button",
+                "radius": 60,
+                "img_path": "assets/images/pause_button.png",
+                "anchor": "top_left",
+                "x_offset": 85,
+                "y_offset": 75
+            }
         ]
     }
 }

@@ -12,23 +12,22 @@
             {
                 "name": "play_button",
                 "radius": 88,
-                "y_pos": 700,
                 "img_path": "assets/images/play_button.png",
-                "offset": -300
+                "x_offset": -300,
+                "y_offset": 150
             },
             {
                 "name": "retry_button",
                 "radius": 88,
-                "y_pos": 700,
                 "img_path": "assets/images/retry_button.png",
-                "offset": 0
+                "y_offset": 150
             },
             {
                 "name": "quit_button",
                 "radius": 88,
-                "y_pos": 700,
                 "img_path": "assets/images/quit_button.png",
-                "offset": 300
+                "x_offset": 300,
+                "y_offset": 150
             }
         ]
     }
