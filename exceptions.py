@@ -25,7 +25,6 @@ class InvalidConfigurationError(GameError):
     def __init__(self, message):
         super().__init__(message)
 
-
 # Chyba nie będę robil zapisu, ale się zobaczy
 # class SaveGameCorruptedError(GameError):
 #     """Rzucany, gdy plik zapisu jest uszkodzony."""

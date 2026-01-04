@@ -1,5 +1,6 @@
 {
     "background_img": "assets/images/Level1_bg.png",
+    "high_score": 0,
     "slingshot":{
         "name": "slingshot",
         "height": 300,
@@ -16,9 +17,27 @@
             "name": "rock",
             "mass": 1,
             "radius":32,
-            "pos_x": 260,
-            "pos_y": 700,
-            "img_path": "assets/images/rock.png"
+            "img_path": "assets/images/rock.png",
+            "score": 2000
+        },
+        {
+            "name": "kam",
+            "mass": 1,
+            "radius":32,
+            "img_path": "assets/images/rock.png",
+            "score": 2000
+        }
+    ],
+    "enemies":[
+        {
+            "name": "goblin_1",
+            "mass": 1,
+            "health": 100,
+            "height": 150,
+            "width": 113,
+            "pos_x": 800,
+            "pos_y": 870,
+            "img_path": "assets/images/normal_goblin.png"
         }
     ],
     "structures":[
@@ -28,7 +47,7 @@
             "health": 50,
             "width": 50,
             "height":150,
-            "pos_x": 900,
+            "pos_x": 600,
             "pos_y": 50,
             "img_path": "assets/images/rock.png"
         }

@@ -57,6 +57,7 @@ class AngryKnightsApp:
 
 
 if __name__ == '__main__':
+
     if sys.platform == "win32":
         myappid = 'mojanazwa.gra.knights.v1'
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
