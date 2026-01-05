@@ -2,14 +2,31 @@
     "background_img": "assets/images/Level1_bg.png",
     "gravity_x": 0,
     "gravity_y": 900,
-    "high_score": 7136,
-    "font_path": "assets/fonts/Dalek.ttf",
-    "font_size": 70,
-    "text": "SCORE:",
-    "text_offset": 25,
-    "text_color_R": 135,
-    "text_color_G": 113,
-    "text_color_B": 74,
+    "high_score": 6521,
+    "texts": [
+        {
+            "name": "score_text",
+            "font_path": "assets/fonts/Dalek.ttf",
+            "font_size": 70,
+            "text": "SCORE:",
+            "anchor": "topright",
+            "y_offset": 125,
+            "text_color_R": 135,
+            "text_color_G": 113,
+            "text_color_B": 74
+        },
+        {
+            "name": "high_score_text",
+            "font_path": "assets/fonts/Dalek.ttf",
+            "font_size": 70,
+            "text": "HIGH_SCORE:",
+            "anchor": "topright",
+            "y_offset": 25,
+            "text_color_R": 135,
+            "text_color_G": 113,
+            "text_color_B": 74
+        }
+    ],
     "objects": {
         "slingshot": {
             "name": "slingshot",
@@ -98,7 +115,7 @@
                 "name": "pause_button",
                 "radius": 60,
                 "img_path": "assets/images/pause_button.png",
-                "anchor": "top_left",
+                "anchor": "topleft",
                 "x_offset": 85,
                 "y_offset": 75
             }

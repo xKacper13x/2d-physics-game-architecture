@@ -14,9 +14,9 @@ class GameObject:
             if 'width' in object_data:
                 self._width = int(object_data['width'])
                 self._size = (self._width, self._height)
-                self._image = self.load_image(self._img_path, self._size)
+                self._image = self._load_image(self._img_path, self._size)
             else:
-                self._image = self.load_image(self._img_path, self._height)
+                self._image = self._load_image(self._img_path, self._height)
                 self._width = self._image.get_width()
                 self._size = (self._width, self._height)
         else:
@@ -25,7 +25,7 @@ class GameObject:
             self._size = (diameter, diameter)
 
             helpers.check_size(self._size)
-            self._image = self.load_image(self._img_path, self._size)
+            self._image = self._load_image(self._img_path, self._size)
 
         self._object_rect = self._image.get_rect()
         self._object_rect.center = self._pos
@@ -36,7 +36,7 @@ class GameObject:
     def position(self):
         return self._object_rect.center
 
-    def load_image(self, img_path, img_size=None):
+    def _load_image(self, img_path, img_size=None):
         return helpers.load_image(img_path, img_size)
 
     def draw(self, screen: pygame.Surface) -> None:

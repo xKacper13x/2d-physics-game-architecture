@@ -5,58 +5,54 @@ import pymunk
 import json
 import math
 import helpers
-import buttons
+import ui
 
 
 class State:
     def __init__(self, screen_size, data):
         self._screen_size = screen_size
-        if 'text' in data:
-            self._text_offset = data['text_offset']
-            self._font_path = data['font_path']
-            self._font_size = data['font_size']
-            self._font = helpers.initialize_font(self._font_path,
-                                                 self._font_size)
-            self._initial_text = data['text']
-            text_color_R = data['text_color_R']
-            text_color_G = data['text_color_G']
-            text_color_B = data['text_color_B']
-            self._text_color = (text_color_R, text_color_G, text_color_B)
 
         self._buttons_dict = {}
+        self._texts_dict = {}
         self._objects = self._initialize_objects(data)
+        self._texts = self._initialize_texts(data)
 
     def _initialize_objects(self, data):
-        data = data['objects']
-        if 'buttons' in data:
-            self._buttons = self._initialize_buttons(data)
-            return self._buttons
-        return []
+        result = []
+
+        objects_data = data['objects']
+        if 'buttons' in objects_data:
+            self._buttons = self._initialize_buttons(objects_data)
+            result += self._buttons
+
+        return result
+
+    def _initialize_texts(self, data):
+        created_texts = []
+        if 'texts' in data:
+            object_data = data['texts']
+
+            created_texts = []
+            for obj in object_data:
+                text = ui.Text(obj, self._screen_size)
+
+                created_texts.append(text)
+                self._texts_dict[text.name()] = text
+        return created_texts
 
     def _initialize_buttons(self, data):
         object_data = data['buttons']
 
         created_buttons = []
         for obj in object_data:
-            if 'text' in obj.keys():
-                button = buttons.TextButton(obj, self._screen_size)
+            if 'texts' in obj.keys():
+                button = ui.TextButton(obj, self._screen_size)
             else:
-                button = buttons.Button(obj, self._screen_size)
+                button = ui.Button(obj, self._screen_size)
 
             created_buttons.append(button)
             self._buttons_dict[button.name()] = button
         return created_buttons
-
-    def _draw_text(self, text: str, anchor: str,
-                   position: tuple | pygame.Vector2, screen) -> None:
-        self._text_surface = self._font.render(text, True,
-                                               self._text_color)
-        self._text_rect = self._text_surface.get_rect()
-
-        setattr(self._text_rect, anchor, position)
-
-        if self._text_surface is not None:
-            screen.blit(self._text_surface, self._text_rect)
 
     def _set_background(self, img_path):
         self._background_image = self.load_image(img_path)
@@ -70,12 +66,18 @@ class State:
         for obj in self._objects:
             obj.draw(screen)
 
+    def _draw_texts(self, screen):
+        for text in self._texts:
+            text.draw(screen)
+
     def update(self, events):
         return self
 
     def draw(self, screen):
         screen.fill((255, 255, 255))
         screen.blit(self._background_image, (0, 0))
+        self._draw_objects(screen)
+        self._draw_texts(screen)
 
 
 class MainMenuState(State):
@@ -109,7 +111,6 @@ class MainMenuState(State):
 
     def draw(self, screen):
         super().draw(screen)
-        self._draw_objects(screen)
 
 
 class GameState(State):
@@ -129,8 +130,15 @@ class GameState(State):
             background_img_path = data["background_img"]
             self._set_background(background_img_path)
             self._create_buttons()
+            self._create_texts()
 
         self._current_score = 0
+        new_text = self._score_text.get_initial_text() + f' {self._current_score:^5}'
+        self._score_text.set_text(new_text)
+
+        new_text = self._high_score_text.get_initial_text() + f' {self._high_score:^5}'
+        self._high_score_text.set_text(new_text)
+
         self._max_dis = self._slingshot.get_height() * 0.8
 
         self._object_on_sling = self._current_projectile
@@ -148,6 +156,10 @@ class GameState(State):
 
     def _create_buttons(self):
         self._pause_button = self._buttons_dict['pause_button']
+
+    def _create_texts(self):
+        self._score_text = self._texts_dict['score_text']
+        self._high_score_text = self._texts_dict['high_score_text']
 
     def _initialize_objects(self, data):
         objects = super()._initialize_objects(data)
@@ -250,10 +262,10 @@ class GameState(State):
         self._level_ended = True
 
     def _create_end_game_state(self) -> State:
+        scores = (self._current_score, self._high_score)
         return LevelCompleteState(self._screen_size,
-                                  self._current_score,
-                                  self._level,
-                                  self._result)
+                                  scores,
+                                  self)
 
     def save_high_score(self):
         path = f'objects_config_files/level{self._level}.json'
@@ -261,7 +273,7 @@ class GameState(State):
         helpers.check_path(path)
         with open(path, 'r') as file_handle:
             data = json.load(file_handle)
-        data['high_score'] = self._current_score
+        data['high_score'] = max(self._current_score, self._high_score)
 
         with open(path, 'w') as file_handle:
             json.dump(data, file_handle, indent=4)
@@ -333,13 +345,18 @@ class GameState(State):
             if type(obj).__name__ in killable_objects:
                 objects_to_kill = obj.update(objects_to_kill)
                 self._current_score += obj.collect_points()
+
+                new_text = self._score_text.get_initial_text() + f' {self._current_score:^5}'
+                self._score_text.set_text(new_text)
+                if self._current_score > self._high_score:
+                    self._high_score = self._current_score
+                    new_text = self._high_score_text.get_initial_text() + f' {self._high_score:^5}'
+                    self._high_score_text.set_text(new_text)
             else:
                 obj.update()
 
         for obj in objects_to_kill:
             self._kill_object(obj)
-        if max(self._high_score, self._current_score) > self._high_score:
-            self.save_high_score()
 
         if not self._enemies and not self._level_ended:
             self._end_level()
@@ -381,41 +398,44 @@ class GameState(State):
         if self._level_ended:
             self._timer += 1/60  # Dodajemy czas jednej klatki
             if self._timer >= self._wait_time:
+                self.save_high_score()
                 next_state = self._create_end_game_state()
         return next_state
 
     def draw(self, screen):
-        # Czyści ekran
         super().draw(screen)
         self._draw_trajectory(screen)
-
-        text = self._initial_text + f'  {self._current_score:<4}'
-        pos = (self._screen_size[0] - self._text_offset, self._text_offset)
-        anchor = 'topright'
-        self._draw_text(text, anchor, pos, screen)
-
-        self._draw_objects(screen)
         self._slingshot.draw(screen)
 
 
 class LevelCompleteState(State):
-    def __init__(self, screen_size, score: int, level: int, result: int):
-        self._score = score
-        self._level = level
-        if result not in [0, 1]:
-            raise ValueError('Attr result has incorrect value')
-        self._result = result
+    def __init__(self, screen_size, scores: tuple, completed_level: State):
+
+        self._score, self._high_score = scores
+        self._completed_level = completed_level
+        self._level = self._completed_level.get_level()
 
         path = 'objects_config_files/level_summary.json'
         with open(path, 'r') as file_handle:
             data = json.load(file_handle)
             super().__init__(screen_size, data)
             self._create_buttons()
+            self._create_texts()
+
+        new_text = self._score_text.get_initial_text() + f' {self._score:^5}'
+        self._score_text.set_text(new_text)
+
+        new_text = self._high_score_text.get_initial_text() + f' {self._high_score:^5}'
+        self._high_score_text.set_text(new_text)
 
     def _create_buttons(self):
         self._play_button = self._buttons_dict['play_button']
         self._retry_button = self._buttons_dict['retry_button']
         self._quit_button = self._buttons_dict['quit_button']
+
+    def _create_texts(self):
+        self._score_text = self._texts_dict['score_text']
+        self._high_score_text = self._texts_dict['high_score_text']
 
     def update(self, events):
         next_state = self
@@ -429,6 +449,7 @@ class LevelCompleteState(State):
         return next_state
 
     def draw(self, screen):
+        self._completed_level.draw(screen)
         middle_x, middle_y = self._screen_size / 2
         x_offset = 450
         y_offset = 450
@@ -441,13 +462,8 @@ class LevelCompleteState(State):
         BLACK = (0, 0, 0)
         points = [left_top, right_top, right_bottom, left_bottom]
         pygame.draw.polygon(screen, BLACK, points)
-
-        text = self._initial_text + f'  {self._score:^4}'
-        position = (middle_x, middle_y - self._text_offset)
-        anchor = 'center'
-        self._draw_text(text, anchor, position, screen)
-
         self._draw_objects(screen)
+        self._draw_texts(screen)
 
 
 class PauseState(State):
@@ -480,4 +496,5 @@ class PauseState(State):
         return self
 
     def draw(self, screen):
+        self._paused_state.draw(screen)
         self._draw_objects(screen)

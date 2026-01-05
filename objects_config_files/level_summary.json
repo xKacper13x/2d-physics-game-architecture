@@ -1,12 +1,27 @@
 {
     "buttons_spacing": 300,
-    "font_path": "assets/fonts/Dalek.ttf",
-    "font_size": 100,
-    "text": "SCORE:",
-    "text_offset": 130,
-    "text_color_R": 235,
-    "text_color_G": 213,
-    "text_color_B": 174,
+    "texts": [
+        {
+            "name": "score_text",
+            "font_path": "assets/fonts/Dalek.ttf",
+            "font_size": 100,
+            "text": "SCORE:",
+            "y_offset": -275,
+            "text_color_R": 235,
+            "text_color_G": 213,
+            "text_color_B": 174
+        },
+        {
+            "name": "high_score_text",
+            "font_path": "assets/fonts/Dalek.ttf",
+            "font_size": 70,
+            "text": "HIGH_SCORE:",
+            "y_offset": -125,
+            "text_color_R": 235,
+            "text_color_G": 213,
+            "text_color_B": 174
+        }
+    ],
     "objects":{
         "buttons":[
             {

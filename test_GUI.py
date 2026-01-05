@@ -1,5 +1,5 @@
 from states.level_end_state import State
-from buttons import Button
+from ui import Button
 import exceptions
 import pytest
 import pygame

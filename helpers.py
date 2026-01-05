@@ -49,3 +49,23 @@ def initialize_font(font_path, font_size):
         pygame.font.init()
     font = pygame.font.Font(font_path, font_size)
     return font
+
+
+def base_pos_on_anchor(anchor: str, size: pygame.Vector2) -> tuple:
+    base_x, base_y = 0, 0
+    size_w, size_h = size
+
+    if anchor == 'center':
+        base_x, base_y = size_w / 2, size_h / 2
+    elif anchor == 'topleft':
+        base_x, base_y = 0, 0
+    elif anchor == 'topright':
+        base_x, base_y = size_w, 0
+    elif anchor == 'bottomleft':
+        base_x, base_y = 0, size_h
+    elif anchor == 'bottomright':
+        base_x, base_y = size_w, size_h
+    else:
+        raise ValueError('Invalid anchor')
+
+    return (base_x, base_y)

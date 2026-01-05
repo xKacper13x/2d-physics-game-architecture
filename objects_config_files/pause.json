@@ -6,7 +6,7 @@
                 "name": "play_button",
                 "radius": 60,
                 "img_path": "assets/images/play_button.png",
-                "anchor": "top_left",
+                "anchor": "topleft",
                 "x_offset": 85,
                 "y_offset": 75
             },
@@ -14,7 +14,7 @@
                 "name": "retry_button",
                 "radius": 60,
                 "img_path": "assets/images/retry_button.png",
-                "anchor": "top_left",
+                "anchor": "topleft",
                 "x_offset": 85,
                 "y_offset": 225
             },
@@ -22,7 +22,7 @@
                 "name": "settings_button",
                 "radius": 60,
                 "img_path": "assets/images/settings_button.png",
-                "anchor": "top_left",
+                "anchor": "topleft",
                 "x_offset": 85,
                 "y_offset": 375
             },
@@ -30,7 +30,7 @@
                 "name": "quit_button",
                 "radius": 60,
                 "img_path": "assets/images/quit_button.png",
-                "anchor": "top_left",
+                "anchor": "topleft",
                 "x_offset": 85,
                 "y_offset": 525
             }

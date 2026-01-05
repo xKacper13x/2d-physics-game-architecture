@@ -7,30 +7,57 @@
                 "name": "play_menu_button",
                 "radius": 88,
                 "img_path": "assets/images/Title_Screen_button.png",
-                "font_path": "assets/fonts/Dalek.ttf",
-                "font_size": 35,
-                "text": "PLAY",
                 "x_offset": -300,
-                "y_offset": -50
+                "y_offset": -50,
+                "texts":
+                [
+                    {
+                        "name": "play_text",
+                        "font_path": "assets/fonts/Dalek.ttf",
+                        "font_size": 35,
+                        "text": "PLAY",
+                        "text_color_R": 235,
+                        "text_color_G": 213,
+                        "text_color_B": 174
+                    }
+                ]
             },
             {
                 "name": "options_menu_button",
                 "radius": 88,
                 "img_path": "assets/images/Title_Screen_button.png",
-                "font_path": "assets/fonts/Dalek.ttf",
-                "font_size": 35,
-                "text": "OPTIONS",
-                "y_offset": -50
+                "y_offset": -50,
+                "texts":
+                [
+                    {
+                        "name": "play_text",
+                        "font_path": "assets/fonts/Dalek.ttf",
+                        "font_size": 35,
+                        "text": "OPTIONS",
+                        "text_color_R": 235,
+                        "text_color_G": 213,
+                        "text_color_B": 174
+                    }
+                ]
             },
             {
                 "name": "quit_menu_button",
                 "radius": 88,
                 "img_path": "assets/images/Title_Screen_button.png",
-                "font_path": "assets/fonts/Dalek.ttf",
-                "font_size": 35,
-                "text": "QUIT",
                 "x_offset": 300,
-                "y_offset": -50
+                "y_offset": -50,
+                "texts":
+                [
+                    {
+                        "name": "quit_text",
+                        "font_path": "assets/fonts/Dalek.ttf",
+                        "font_size": 35,
+                        "text": "QUIT",
+                        "text_color_R": 235,
+                        "text_color_G": 213,
+                        "text_color_B": 174
+                    }
+                ]
             }
         ]
     }
