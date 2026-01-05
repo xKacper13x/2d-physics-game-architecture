@@ -200,9 +200,10 @@ class GameState(State):
             if event.type == pygame.MOUSEBUTTONUP:
                 if self._dragged_object is not None:
                     if distance >= 70:
+                        power = self._slingshot.get_power()
                         self._current_projectile.launch(
-                                                                (dis_x*18,
-                                                                 dis_y*18))
+                                                                (dis_x*power,
+                                                                 dis_y*power))
                     else:
                         self._current_projectile.go_to_start_pos()
                     self._dragged_object = None
@@ -264,6 +265,55 @@ class GameState(State):
 
         with open(path, 'w') as file_handle:
             json.dump(data, file_handle, indent=4)
+
+    def _draw_trajectory(self, screen):
+        if self._dragged_object is None:
+            return
+
+        start_x, start_y = self._current_projectile.position()
+        sling_x, sling_y = self._slingshot_pos
+
+        diff_x = sling_x - start_x
+        diff_y = sling_y - start_y
+
+        power = self._slingshot.get_power()
+
+        impulse_x = diff_x * power
+        impulse_y = diff_y * power
+
+        mass = self._current_projectile.get_mass()
+
+        if mass == 0:
+            mass = 1
+
+        vel_x = impulse_x / mass
+        vel_y = impulse_y / mass
+
+        # Symulacja trajektorii
+        gravity_x, gravity_y = self._space.gravity
+        point_count = 30
+        time_step = 0.08
+
+        for i in range(1, point_count):
+            t = i * time_step + time_step
+
+            # Wzór na pozycję: s = s0 + vt + 0.5at^2
+            curr_x = start_x + (vel_x * t) + (0.5 * gravity_x * t * t)
+            curr_y = start_y + (vel_y * t) + (0.5 * gravity_y * t * t)
+
+            if curr_y > self._ground.get_pos_y():
+                break
+            elif curr_x > self._screen_size[0] / 2:
+                break
+
+            # Rysowanie kropki
+            radius = 5 - (i // 10)
+            radius = max(radius, 2)
+
+            pygame.draw.circle(screen, (255, 255, 255), (int(curr_x),
+                                                         int(curr_y)), radius)
+            pygame.draw.circle(screen, (0, 0, 0), (int(curr_x), int(curr_y)),
+                               radius, 1)
 
     def update(self, events: list) -> State:
         self._space.step(1/60)
@@ -337,6 +387,7 @@ class GameState(State):
     def draw(self, screen):
         # Czyści ekran
         super().draw(screen)
+        self._draw_trajectory(screen)
 
         text = self._initial_text + f'  {self._current_score:<4}'
         pos = (self._screen_size[0] - self._text_offset, self._text_offset)

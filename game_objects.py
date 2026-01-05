@@ -51,6 +51,7 @@ class Slingshot(GameObject):
         object_data = data['slingshot']
         self._pos = (object_data['pos_x'], object_data['pos_y'])
         super().__init__(object_data)
+        self._power = object_data['power']
 
         self._rubber_color = (object_data['color_R'], object_data['color_G'],
                               object_data['color_B'])
@@ -60,6 +61,9 @@ class Slingshot(GameObject):
                                                      self._height / -3)
         self._right_fork_offset = pygame.math.Vector2(self._width / 4.15,
                                                       self._height / -2.6)
+
+    def get_power(self) -> int:
+        return self._power
 
     def get_height(self):
         return self._height
@@ -96,6 +100,9 @@ class PhysicalObject(GameObject):
         self._original_image = self._image
 
         self._last_velocity = pygame.Vector2(0, 0)
+
+    def get_mass(self):
+        return self._mass
 
     def collect_points(self) -> int:
         points = self._score
@@ -331,7 +338,7 @@ class Projectile(PhysicalObject):
     def shape(self):
         return self._shape
 
-    def get_rubber_anchor(self):
+    def get_rubber_anchor(self) -> tuple:
         projectile_center = pygame.math.Vector2(self.position())
         slingshot_center = pygame.math.Vector2(self._pos)
 
@@ -350,7 +357,6 @@ class Projectile(PhysicalObject):
         # Dzięki temu wektor sięga od środka idealnie do krawędzi
         anchor_vector = projectile_center - (direction * self._radius)
 
-        # Zwracamy jako krotkę (x, y)
         return (anchor_vector.x, anchor_vector.y)
 
 
@@ -362,6 +368,9 @@ class Ground:
         self._start_point = (-350, self._y_pos)
         self._end_point = (self._width, self._y_pos)
         self._create_physics(space)
+
+    def get_pos_y(self):
+        return self._y_pos
 
     def _create_physics(self, space):
         self._body = space.static_body
