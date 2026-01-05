@@ -2,7 +2,7 @@
     "background_img": "assets/images/Level1_bg.png",
     "gravity_x": 0,
     "gravity_y": 900,
-    "high_score": 6521,
+    "high_score": 5521,
     "texts": [
         {
             "name": "score_text",
@@ -47,7 +47,7 @@
                 "health": "inf",
                 "radius": 32,
                 "img_path": "assets/images/rock.png",
-                "score": 2000
+                "score": 0
             },
             {
                 "name": "kam",
@@ -55,7 +55,7 @@
                 "health": "inf",
                 "radius": 32,
                 "img_path": "assets/images/rock.png",
-                "score": 2000
+                "score": 0
             }
         ],
         "enemies": [

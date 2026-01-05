@@ -1,11 +1,14 @@
-from game_objects import (Projectile, Slingshot, Structure,
-                          Ground, Enemy, PhysicalObject)
+from entities.objects_base import PhysicalObject
+from entities.static_objects import Slingshot, Ground
+from entities.enemy import Enemy
+from entities.projectile import Projectile
+from entities.structure import Structure
 import pygame
 import pymunk
 import json
 import math
 import helpers
-import ui
+import entities.ui_elements as ui_elements
 
 
 class State:
@@ -34,7 +37,7 @@ class State:
 
             created_texts = []
             for obj in object_data:
-                text = ui.Text(obj, self._screen_size)
+                text = ui_elements.Text(obj, self._screen_size)
 
                 created_texts.append(text)
                 self._texts_dict[text.name()] = text
@@ -46,9 +49,9 @@ class State:
         created_buttons = []
         for obj in object_data:
             if 'texts' in obj.keys():
-                button = ui.TextButton(obj, self._screen_size)
+                button = ui_elements.TextButton(obj, self._screen_size)
             else:
-                button = ui.Button(obj, self._screen_size)
+                button = ui_elements.Button(obj, self._screen_size)
 
             created_buttons.append(button)
             self._buttons_dict[button.name()] = button
@@ -97,7 +100,7 @@ class MainMenuState(State):
     def update(self, events):
         next_state = self
         if self._play_button.is_clicked(events):
-            next_state = GameState(self._screen_size, 1)
+            next_state = 'START_GAME'
         elif self._options_button.is_clicked(events):
             pass
             new_event = pygame.event.Event(pygame.KEYDOWN)
@@ -108,9 +111,6 @@ class MainMenuState(State):
             quit_event = pygame.event.Event(pygame.QUIT)
             pygame.event.post(quit_event)
         return next_state
-
-    def draw(self, screen):
-        super().draw(screen)
 
 
 class GameState(State):
@@ -133,10 +133,12 @@ class GameState(State):
             self._create_texts()
 
         self._current_score = 0
-        new_text = self._score_text.get_initial_text() + f' {self._current_score:^5}'
+        initial_text = self._score_text.get_initial_text()
+        new_text = initial_text + f' {self._current_score:^5}'
         self._score_text.set_text(new_text)
 
-        new_text = self._high_score_text.get_initial_text() + f' {self._high_score:^5}'
+        initial_text = self._high_score_text.get_initial_text()
+        new_text = initial_text + f' {self._high_score:^5}'
         self._high_score_text.set_text(new_text)
 
         self._max_dis = self._slingshot.get_height() * 0.8
@@ -252,12 +254,6 @@ class GameState(State):
     def _end_level(self):
         if self._enemies:
             self._current_score = 0
-            self._result = 0
-            self._result = 0
-        else:
-            points = (len(self._projectiles_data) - self._ammo_pointer) * 1500
-            self._current_score += points
-            self._result = 1
         self._timer = 0
         self._level_ended = True
 
@@ -269,6 +265,8 @@ class GameState(State):
 
     def save_high_score(self):
         path = f'objects_config_files/level{self._level}.json'
+        if self._current_score > self._high_score:
+            self._high_score = self._current_score
 
         helpers.check_path(path)
         with open(path, 'r') as file_handle:
@@ -346,11 +344,12 @@ class GameState(State):
                 objects_to_kill = obj.update(objects_to_kill)
                 self._current_score += obj.collect_points()
 
-                new_text = self._score_text.get_initial_text() + f' {self._current_score:^5}'
+                initial_text = self._score_text.get_initial_text()
+                new_text = initial_text + f' {self._current_score:^5}'
                 self._score_text.set_text(new_text)
                 if self._current_score > self._high_score:
-                    self._high_score = self._current_score
-                    new_text = self._high_score_text.get_initial_text() + f' {self._high_score:^5}'
+                    initial_text = self._high_score_text.get_initial_text()
+                    new_text = initial_text + f' {self._high_score:^5}'
                     self._high_score_text.set_text(new_text)
             else:
                 obj.update()
@@ -425,7 +424,8 @@ class LevelCompleteState(State):
         new_text = self._score_text.get_initial_text() + f' {self._score:^5}'
         self._score_text.set_text(new_text)
 
-        new_text = self._high_score_text.get_initial_text() + f' {self._high_score:^5}'
+        initial_text = self._high_score_text.get_initial_text()
+        new_text = initial_text + f' {self._high_score:^5}'
         self._high_score_text.set_text(new_text)
 
     def _create_buttons(self):
@@ -445,7 +445,7 @@ class LevelCompleteState(State):
         elif self._retry_button.is_clicked(events):
             next_state = GameState(self._screen_size, self._level)
         elif self._quit_button.is_clicked(events):
-            next_state = MainMenuState(self._screen_size)
+            next_state = "GO_TO_MENU"
         return next_state
 
     def draw(self, screen):
@@ -488,7 +488,7 @@ class PauseState(State):
         if self._settings_button.is_clicked(events):
             pass
         if self._quit_button.is_clicked(events):
-            return MainMenuState(self._screen_size)
+            return "GO_TO_MENU"
 
         for event in events:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:

@@ -1,4 +1,4 @@
-from game_objects import GameObject
+from .static_objects import GameObject
 import pygame
 import helpers
 
