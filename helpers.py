@@ -51,8 +51,11 @@ def initialize_font(font_path, font_size):
     return font
 
 
-def base_pos_on_anchor(anchor: str, size: pygame.Vector2) -> tuple:
+def base_pos_on_anchor(anchor: str, size: pygame.Vector2 | tuple) -> tuple:
     base_x, base_y = 0, 0
+
+    check_size(size)
+    size = pygame.Vector2(size)
     size_w, size_h = size
 
     if anchor == 'center':

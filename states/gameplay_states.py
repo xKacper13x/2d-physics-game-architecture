@@ -1,3 +1,4 @@
+from .base_state import State
 from entities.objects_base import PhysicalObject
 from entities.static_objects import Slingshot, Ground
 from entities.enemy import Enemy
@@ -8,109 +9,6 @@ import pymunk
 import json
 import math
 import helpers
-import entities.ui_elements as ui_elements
-
-
-class State:
-    def __init__(self, screen_size, data):
-        self._screen_size = screen_size
-
-        self._buttons_dict = {}
-        self._texts_dict = {}
-        self._objects = self._initialize_objects(data)
-        self._texts = self._initialize_texts(data)
-
-    def _initialize_objects(self, data):
-        result = []
-
-        objects_data = data['objects']
-        if 'buttons' in objects_data:
-            self._buttons = self._initialize_buttons(objects_data)
-            result += self._buttons
-
-        return result
-
-    def _initialize_texts(self, data):
-        created_texts = []
-        if 'texts' in data:
-            object_data = data['texts']
-
-            created_texts = []
-            for obj in object_data:
-                text = ui_elements.Text(obj, self._screen_size)
-
-                created_texts.append(text)
-                self._texts_dict[text.name()] = text
-        return created_texts
-
-    def _initialize_buttons(self, data):
-        object_data = data['buttons']
-
-        created_buttons = []
-        for obj in object_data:
-            if 'texts' in obj.keys():
-                button = ui_elements.TextButton(obj, self._screen_size)
-            else:
-                button = ui_elements.Button(obj, self._screen_size)
-
-            created_buttons.append(button)
-            self._buttons_dict[button.name()] = button
-        return created_buttons
-
-    def _set_background(self, img_path):
-        self._background_image = self.load_image(img_path)
-
-    def load_image(self, img_path, img_size=None):
-        if img_size is None:
-            img_size = self._screen_size
-        return helpers.load_image(img_path, img_size)
-
-    def _draw_objects(self, screen):
-        for obj in self._objects:
-            obj.draw(screen)
-
-    def _draw_texts(self, screen):
-        for text in self._texts:
-            text.draw(screen)
-
-    def update(self, events):
-        return self
-
-    def draw(self, screen):
-        screen.fill((255, 255, 255))
-        screen.blit(self._background_image, (0, 0))
-        self._draw_objects(screen)
-        self._draw_texts(screen)
-
-
-class MainMenuState(State):
-    def __init__(self, screen_size):
-        with open('objects_config_files/menu.json') as file_handle:
-            data = json.load(file_handle)
-            super().__init__(screen_size, data)
-            self._create_buttons()
-            background_img_path = data["background_img"]
-            self._set_background(background_img_path)
-
-    def _create_buttons(self):
-        self._play_button = self._buttons_dict['play_menu_button']
-        self._options_button = self._buttons_dict['options_menu_button']
-        self._quit_button = self._buttons_dict['quit_menu_button']
-
-    def update(self, events):
-        next_state = self
-        if self._play_button.is_clicked(events):
-            next_state = 'START_GAME'
-        elif self._options_button.is_clicked(events):
-            pass
-            new_event = pygame.event.Event(pygame.KEYDOWN)
-            new_event.key = pygame.K_F11
-            pygame.event.post(new_event)
-            # next_state SettingsState(self._screen_size)
-        elif self._quit_button.is_clicked(events):
-            quit_event = pygame.event.Event(pygame.QUIT)
-            pygame.event.post(quit_event)
-        return next_state
 
 
 class GameState(State):
@@ -407,6 +305,40 @@ class GameState(State):
         self._slingshot.draw(screen)
 
 
+class PauseState(State):
+    def __init__(self, screen_size: pygame.Vector2, paused_state: State):
+        self._paused_state = paused_state
+        with open('objects_config_files/pause.json') as file_handle:
+            data = json.load(file_handle)
+            super().__init__(screen_size, data)
+            self._create_buttons()
+
+    def _create_buttons(self):
+        self._play_button = self._buttons_dict['play_button']
+        self._retry_button = self._buttons_dict['retry_button']
+        self._settings_button = self._buttons_dict['settings_button']
+        self._quit_button = self._buttons_dict['quit_button']
+
+    def update(self, events):
+        if self._play_button.is_clicked(events):
+            return self._paused_state
+        if self._retry_button.is_clicked(events):
+            return GameState(self._screen_size, self._paused_state.get_level())
+        if self._settings_button.is_clicked(events):
+            pass
+        if self._quit_button.is_clicked(events):
+            return "GO_TO_MENU"
+
+        for event in events:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                return self._paused_state
+        return self
+
+    def draw(self, screen):
+        self._paused_state.draw(screen)
+        self._draw_objects(screen)
+
+
 class LevelCompleteState(State):
     def __init__(self, screen_size, scores: tuple, completed_level: State):
 
@@ -464,37 +396,3 @@ class LevelCompleteState(State):
         pygame.draw.polygon(screen, BLACK, points)
         self._draw_objects(screen)
         self._draw_texts(screen)
-
-
-class PauseState(State):
-    def __init__(self, screen_size: pygame.Vector2, paused_state: State):
-        self._paused_state = paused_state
-        with open('objects_config_files/pause.json') as file_handle:
-            data = json.load(file_handle)
-            super().__init__(screen_size, data)
-            self._create_buttons()
-
-    def _create_buttons(self):
-        self._play_button = self._buttons_dict['play_button']
-        self._retry_button = self._buttons_dict['retry_button']
-        self._settings_button = self._buttons_dict['settings_button']
-        self._quit_button = self._buttons_dict['quit_button']
-
-    def update(self, events):
-        if self._play_button.is_clicked(events):
-            return self._paused_state
-        if self._retry_button.is_clicked(events):
-            return GameState(self._screen_size, self._paused_state.get_level())
-        if self._settings_button.is_clicked(events):
-            pass
-        if self._quit_button.is_clicked(events):
-            return "GO_TO_MENU"
-
-        for event in events:
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                return self._paused_state
-        return self
-
-    def draw(self, screen):
-        self._paused_state.draw(screen)
-        self._draw_objects(screen)

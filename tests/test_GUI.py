@@ -1,4 +1,4 @@
-from states.level_end_state import State
+from states.base_state import State
 from entities.ui_elements import Button
 import exceptions
 import pytest
