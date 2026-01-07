@@ -99,7 +99,6 @@ class Projectile(PhysicalObject):
         projectile_center = pygame.math.Vector2(self.position())
         slingshot_center = pygame.math.Vector2(self._pos)
 
-        # Obliczamy wektor kierunku: Od Ptaka -> Do Procy
         direction = slingshot_center - projectile_center
 
         # Zabezpieczenie: jeśli ptak jest idealnie w środku procy (długość 0),

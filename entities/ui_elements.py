@@ -40,7 +40,7 @@ class Text:
     def get_font_size(self) -> int:
         return self._font_size
 
-    def _add_text(self):
+    def _add_text(self) -> None:
         self._text_surface = self._font.render(self._text, True,
                                                self._text_color)
         self._text_rect = self._text_surface.get_rect()

@@ -113,9 +113,8 @@ class GameState(State):
                 if self._dragged_object is not None:
                     if distance >= 70:
                         power = self._slingshot.get_power()
-                        self._current_projectile.launch(
-                                                                (dis_x*power,
-                                                                 dis_y*power))
+                        self._current_projectile.launch((dis_x*power,
+                                                         dis_y*power))
                     else:
                         self._current_projectile.go_to_start_pos()
                     self._dragged_object = None
@@ -199,20 +198,19 @@ class GameState(State):
 
         # Symulacja trajektorii
         gravity_x, gravity_y = self._space.gravity
-        point_count = 30
-        time_step = 0.08
+        curr_x = start_x
+        curr_y = start_y
+        time_step = 0.12
+        i = 1
 
-        for i in range(1, point_count):
+        on_the_left_side = curr_x <= self._screen_size[0] / 2
+        while curr_y <= self._ground.get_pos_y() and on_the_left_side:
             t = i * time_step + time_step
+            i += 1
 
             # Wzór na pozycję: s = s0 + vt + 0.5at^2
             curr_x = start_x + (vel_x * t) + (0.5 * gravity_x * t * t)
             curr_y = start_y + (vel_y * t) + (0.5 * gravity_y * t * t)
-
-            if curr_y > self._ground.get_pos_y():
-                break
-            elif curr_x > self._screen_size[0] / 2:
-                break
 
             # Rysowanie kropki
             radius = 5 - (i // 10)
