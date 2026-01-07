@@ -8,17 +8,24 @@ class Text:
                  surface: pygame.Vector2 | pygame.Rect) -> None:
         self._surface = surface
         self._name = data.get('name', '')
-        self._initial_text = data.get('text', '')
-        self._text = data.get('text', '')
+
+        text = str(data.get('text', ''))
+        self._initial_text = text
+        self._text = text
 
         text_color_R = data.get('text_color_R', 0)
         text_color_G = data.get('text_color_G', 0)
         text_color_B = data.get('text_color_B', 0)
         self._text_color = (text_color_R, text_color_G, text_color_B)
 
-        self._font_path = data['font_path']
-        self._font_size = data['font_size']
-        self._font = helpers.initialize_font(self._font_path, self._font_size)
+        self._font_path = data.get('font_path', '')
+        self._font_size = data.get('font_size', 10)
+
+        self._font_size = int(self._font_size)
+
+        self._font = helpers.initialize_font(self._font_path,
+                                             self._font_size)
+
         self._anchor = data.get('anchor', 'center')
 
         self._x_offset = data.get('x_offset', 0)
@@ -41,8 +48,14 @@ class Text:
         return self._font_size
 
     def _add_text(self) -> None:
-        self._text_surface = self._font.render(self._text, True,
-                                               self._text_color)
+        try:
+            self._text_surface = self._font.render(self._text, True,
+                                                   self._text_color)
+        except ValueError:
+            self._text_color = (0, 0, 0)
+            self._text_surface = self._font.render(self._text, True,
+                                                   self._text_color)
+
         self._text_rect = self._text_surface.get_rect()
 
         if isinstance(self._surface, pygame.Rect):
@@ -51,7 +64,11 @@ class Text:
             position = helpers.base_pos_on_anchor(self._anchor, self._surface)
             self._pos = pygame.Vector2(position)
         self._pos += pygame.Vector2(self._x_offset, self._y_offset)
-        setattr(self._text_rect, self._anchor, self._pos)
+
+        try:
+            setattr(self._text_rect, self._anchor, self._pos)
+        except AttributeError:
+            setattr(self._text_rect, 'center', self._pos)
 
     def set_text(self, new_text: str = '') -> None:
         if new_text == '':
@@ -73,13 +90,12 @@ class Text:
         self._add_text()
 
     def set_font_size(self, new_size: int) -> None:
-        if type(new_size) is not int:
-            raise ValueError('New size must be an integer number')
+        if isinstance(new_size, (int, float)):
+            self._font_size = max(1, new_size)
 
-        self._font_size = max(1, new_size)
-
-        self._font = helpers.initialize_font(self._font_path, self._font_size)
-        self._add_text()
+            self._font = helpers.initialize_font(self._font_path,
+                                                 self._font_size)
+            self._add_text()
 
     def draw(self, screen):
         if self._text_surface is not None:
@@ -122,7 +138,18 @@ class Button(GameObject):
 class TextButton(Button):
     def __init__(self, object_data, screen_size: pygame.Vector2):
         super().__init__(object_data, screen_size)
-        self._text = Text(object_data['texts'][0], self._object_rect)
+        super().__init__(object_data, screen_size)
+
+        # To zabezpiecza przed pustą listą [], która prześlizgnęła się przez
+        # initialize_buttons
+        texts_list = object_data.get('texts', [])
+        if texts_list and len(texts_list) > 0:
+            text_data = texts_list[0]
+        else:
+            # Awaryjny tekst, żeby gra nie padła
+            text_data = {'text': 'Error', 'font_size': 35}
+
+        self._text = Text(text_data, self._object_rect)
 
     def draw(self, screen):
         super().draw(screen)

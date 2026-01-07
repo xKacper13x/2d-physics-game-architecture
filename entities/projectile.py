@@ -52,8 +52,6 @@ class Projectile(PhysicalObject):
     def is_on_sling(self, slingshot_pos, max_distance) -> bool:
         if self._body.body_type != pymunk.Body.DYNAMIC:
             return True
-        # elif self._body.body_type == pymunk.Body.DYNAMIC:
-        #     return False
 
         slingshot_center = pygame.math.Vector2(self._pos)
         current_pos = pygame.math.Vector2(self.position())

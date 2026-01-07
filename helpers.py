@@ -30,6 +30,7 @@ def load_image(img_path, img_size=None):
 
     if img_size is not None:
         check_size(img_size)
+
         # Podano tylko wysokość
         if isinstance(img_size, int):
             height = img_size
@@ -43,11 +44,19 @@ def load_image(img_path, img_size=None):
 
 
 def initialize_font(font_path, font_size):
-    check_path(font_path)
-    check_size(font_size)
+    try:
+        check_size(font_size)
+        size = int(font_size)
+    except (exceptions.InvalidConfigurationError, ValueError, TypeError):
+        size = 35
+
     if not pygame.font.get_init():
         pygame.font.init()
-    font = pygame.font.Font(font_path, font_size)
+    try:
+        check_path(font_path)
+        font = pygame.font.Font(font_path, size)
+    except (exceptions.MissingResourceError, pygame.error):
+        font = pygame.font.Font(None, size)
     return font
 
 

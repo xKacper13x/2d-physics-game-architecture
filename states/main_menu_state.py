@@ -22,11 +22,9 @@ class MainMenuState(State):
         if self._play_button.is_clicked(events):
             next_state = 'START_GAME'
         elif self._options_button.is_clicked(events):
-            pass
             new_event = pygame.event.Event(pygame.KEYDOWN)
             new_event.key = pygame.K_F11
             pygame.event.post(new_event)
-            # next_state SettingsState(self._screen_size)
         elif self._quit_button.is_clicked(events):
             quit_event = pygame.event.Event(pygame.QUIT)
             pygame.event.post(quit_event)

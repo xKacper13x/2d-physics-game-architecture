@@ -1,5 +1,7 @@
 import helpers
 import entities.ui_elements as ui_elements
+import exceptions
+import pygame
 
 
 class State:
@@ -49,7 +51,11 @@ class State:
         return created_buttons
 
     def _set_background(self, img_path):
-        self._background_image = self.load_image(img_path)
+        try:
+            self._background_image = self.load_image(img_path)
+        except (exceptions.MissingResourceError, pygame.error):
+            self._background_image = pygame.Surface(self._screen_size)
+            self._background_image.fill((135, 206, 235))
 
     def load_image(self, img_path, img_size=None):
         if img_size is None:

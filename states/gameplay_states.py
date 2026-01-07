@@ -127,7 +127,6 @@ class GameState(State):
             self._dragged_object = None
 
     def _draw_objects(self, screen):
-        # Rysowanie warstwowe (Proca Tył -> Ptak -> Proca Przód)
         if self._object_on_sling is not None:
             rubber_anchor = self._object_on_sling.get_rubber_anchor()
             self._slingshot.draw_inner_rubber(screen,
@@ -203,8 +202,8 @@ class GameState(State):
         time_step = 0.12
         i = 1
 
-        on_the_left_side = curr_x <= self._screen_size[0] / 2
-        while curr_y <= self._ground.get_pos_y() and on_the_left_side:
+        x_middle = self._screen_size[0] / 2
+        while curr_y <= self._ground.get_pos_y() and curr_x <= x_middle:
             t = i * time_step + time_step
             i += 1
 
