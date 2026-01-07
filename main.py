@@ -36,10 +36,20 @@ class AngryKnightsApp:
                                                    pygame.SCALED)
             self._is_fullscreen = True
 
+    def _manage_states(self, result: State | str) -> State:
+        if isinstance(result, State):
+            return result
+        elif result == "GO_TO_MENU":
+            self.state = MainMenuState(self._screen_size)
+        elif result == "START_GAME":
+            self.state = GameState(self._screen_size, 1)
+        return self.state
+
     def run(self) -> None:
         delta_time = 0.1
         while self.running:
             events = pygame.event.get()
+
             # 1. Przekaż obsługę logiki do aktualnego stanu
             # Stan zwraca samego siebie lub NOWY stan
             result = self._state.update(events)
@@ -57,15 +67,6 @@ class AngryKnightsApp:
             pygame.display.flip()
             delta_time = self.clock.tick(60) / 1000
             delta_time = max(0.001, min(0.1, delta_time))
-
-    def _manage_states(self, result: State | str) -> State:
-        if isinstance(result, State):
-            return result
-        elif result == "GO_TO_MENU":
-            self.state = MainMenuState(self._screen_size)
-        elif result == "START_GAME":
-            self.state = GameState(self._screen_size, 1)
-        return self.state
 
 
 if __name__ == '__main__':

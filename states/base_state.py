@@ -11,7 +11,7 @@ class State:
         self._buttons_dict = {}
         self._texts_dict = {}
         self._objects = self._initialize_objects(data)
-        self._texts = self._initialize_texts(data)
+        self._create_texts(data)
 
     def _initialize_objects(self, data):
         result = []
@@ -23,18 +23,29 @@ class State:
 
         return result
 
-    def _initialize_texts(self, data):
-        created_texts = []
+    def _create_texts(self, data):
         if 'texts' in data:
             object_data = data['texts']
-
-            created_texts = []
             for obj in object_data:
                 text = ui_elements.Text(obj, self._screen_size)
-
-                created_texts.append(text)
                 self._texts_dict[text.name()] = text
-        return created_texts
+
+    def _update_score_labels(self):
+        """
+        Aktualizuje teksty wyników(bieżący i high score),
+        szukając ich w słowniku po nazwie z JSONa.
+        """
+        score_obj = self._texts_dict.get('score_text')
+        if score_obj:
+            base_txt = score_obj.get_initial_text()
+            new_text = base_txt + f' {self._current_score:^5}'
+            score_obj.set_text(new_text)
+
+        high_score_obj = self._texts_dict.get('high_score_text')
+        if high_score_obj:
+            base_txt = high_score_obj.get_initial_text()
+            new_text = base_txt + f' {self._high_score:^5}'
+            high_score_obj.set_text(new_text)
 
     def _initialize_buttons(self, data):
         object_data = data['buttons']
@@ -67,7 +78,7 @@ class State:
             obj.draw(screen)
 
     def _draw_texts(self, screen):
-        for text in self._texts:
+        for text in self._texts_dict.values():
             text.draw(screen)
 
     def update(self, events):

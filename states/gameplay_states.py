@@ -28,16 +28,9 @@ class GameState(State):
             background_img_path = data["background_img"]
             self._set_background(background_img_path)
             self._create_buttons()
-            self._create_texts()
 
         self._current_score = 0
-        initial_text = self._score_text.get_initial_text()
-        new_text = initial_text + f' {self._current_score:^5}'
-        self._score_text.set_text(new_text)
-
-        initial_text = self._high_score_text.get_initial_text()
-        new_text = initial_text + f' {self._high_score:^5}'
-        self._high_score_text.set_text(new_text)
+        self._update_score_labels
 
         self._max_dis = self._slingshot.get_height() * 0.8
 
@@ -57,23 +50,22 @@ class GameState(State):
     def _create_buttons(self):
         self._pause_button = self._buttons_dict['pause_button']
 
-    def _create_texts(self):
-        self._score_text = self._texts_dict['score_text']
-        self._high_score_text = self._texts_dict['high_score_text']
-
     def _initialize_objects(self, data):
         objects = super()._initialize_objects(data)
         data = data['objects']
+
         self._slingshot = Slingshot(data)
-        slingshot_x = self._slingshot.position()[0]
-        slingshot_y = self._slingshot.position()[1] - 95
-        self._slingshot_pos = (slingshot_x, slingshot_y)
+        pos = self._slingshot.position()
+        self._slingshot_pos = (pos[0], pos[1] - 95)
 
         self._projectiles_data = data['projectiles']
         self._current_projectile = self._initialize_projectile()
         objects.append(self._current_projectile)
-        self._enemies = self._initialize_enemies(data)
-        self._structures = self._initialize_structures(data)
+
+        self._enemies = [Enemy(self._space, enemy_data)
+                         for enemy_data in data['enemies']]
+        self._structures = [Structure(self._space, structure_data)
+                            for structure_data in data['structures']]
         return objects + self._enemies + self._structures
 
     def _initialize_projectile(self) -> Projectile:
@@ -81,30 +73,10 @@ class GameState(State):
         projectile = Projectile(self._space, data, self._slingshot_pos)
         return projectile
 
-    def _initialize_enemies(self, data):
-        all_enemies = data['enemies']
-        objects = []
-        for enemy in all_enemies:
-            object = Enemy(self._space, enemy)
-            objects.append(object)
-
-        return objects
-
-    def _initialize_structures(self, data):
-        all_structures = data['structures']
-        objects = []
-        for structure in all_structures:
-            object = Structure(self._space, structure)
-            objects.append(object)
-
-        return objects
-
     def _check_for_launch(self, events):
-        object_pos_x = self._current_projectile.position()[0]
-        object_pos_y = self._current_projectile.position()[1]
+        object_pos = self._current_projectile.position()
+        pull_vector = self._slingshot_pos - object_pos
 
-        dis_x = self._slingshot_pos[0] - object_pos_x
-        dis_y = self._slingshot_pos[1] - object_pos_y
         distance = math.dist(self._slingshot_pos,
                              self._current_projectile.position())
 
@@ -113,8 +85,8 @@ class GameState(State):
                 if self._dragged_object is not None:
                     if distance >= 70:
                         power = self._slingshot.get_power()
-                        self._current_projectile.launch((dis_x*power,
-                                                         dis_y*power))
+                        self._current_projectile.launch((pull_vector.x*power,
+                                                         pull_vector.y*power))
                     else:
                         self._current_projectile.go_to_start_pos()
                     self._dragged_object = None
@@ -144,7 +116,7 @@ class GameState(State):
             self._space.remove(obj_to_remove._body, obj_to_remove._shape)
         if obj_to_remove in self._objects:
             self._objects.remove(obj_to_remove)
-        if type(obj_to_remove).__name__ == 'Enemy':
+        if isinstance(obj_to_remove, Enemy):
             self._enemies.remove(obj_to_remove)
 
     def _end_level(self):
@@ -176,49 +148,37 @@ class GameState(State):
         if self._dragged_object is None:
             return
 
-        start_x, start_y = self._current_projectile.position()
-        sling_x, sling_y = self._slingshot_pos
-
-        diff_x = sling_x - start_x
-        diff_y = sling_y - start_y
-
+        start_pos = pygame.Vector2(self._current_projectile.position())
+        diff = self._slingshot_pos - start_pos
         power = self._slingshot.get_power()
-
-        impulse_x = diff_x * power
-        impulse_y = diff_y * power
+        impulse = diff * power
 
         mass = self._current_projectile.get_mass()
-
-        if mass == 0:
-            mass = 1
-
-        vel_x = impulse_x / mass
-        vel_y = impulse_y / mass
+        # Unika dzielenia przez0
+        mass = max(1, mass)
+        velocity = impulse / mass
 
         # Symulacja trajektorii
-        gravity_x, gravity_y = self._space.gravity
-        curr_x = start_x
-        curr_y = start_y
+        gravity = pygame.Vector2(self._space.gravity)
+        curr_pos = start_pos
         time_step = 0.12
         i = 1
 
         x_middle = self._screen_size[0] / 2
-        while curr_y <= self._ground.get_pos_y() and curr_x <= x_middle:
+        ground_y = self._ground.get_pos_y()
+        while curr_pos.y <= ground_y and curr_pos.x <= x_middle:
             t = i * time_step + time_step
             i += 1
 
             # Wzór na pozycję: s = s0 + vt + 0.5at^2
-            curr_x = start_x + (vel_x * t) + (0.5 * gravity_x * t * t)
-            curr_y = start_y + (vel_y * t) + (0.5 * gravity_y * t * t)
+            curr_pos = start_pos + (velocity * t) + (0.5 * gravity * t * t)
 
             # Rysowanie kropki
             radius = 5 - (i // 10)
             radius = max(radius, 2)
 
-            pygame.draw.circle(screen, (255, 255, 255), (int(curr_x),
-                                                         int(curr_y)), radius)
-            pygame.draw.circle(screen, (0, 0, 0), (int(curr_x), int(curr_y)),
-                               radius, 1)
+            pygame.draw.circle(screen, (255, 255, 255), curr_pos, radius)
+            pygame.draw.circle(screen, (0, 0, 0), curr_pos, radius, 1)
 
     def update(self, events: list) -> State:
         self._space.step(1/60)
@@ -234,18 +194,10 @@ class GameState(State):
 
         objects_to_kill = []
         for obj in self._objects:
-            killable_objects = ['Enemy', 'Structure']
-            if type(obj).__name__ in killable_objects:
+            if isinstance(obj, (Enemy, Structure)):
                 objects_to_kill = obj.update(objects_to_kill)
                 self._current_score += obj.collect_points()
-
-                initial_text = self._score_text.get_initial_text()
-                new_text = initial_text + f' {self._current_score:^5}'
-                self._score_text.set_text(new_text)
-                if self._current_score > self._high_score:
-                    initial_text = self._high_score_text.get_initial_text()
-                    new_text = initial_text + f' {self._high_score:^5}'
-                    self._high_score_text.set_text(new_text)
+                self._update_score_labels()
             else:
                 obj.update()
 
@@ -339,7 +291,7 @@ class PauseState(State):
 class LevelCompleteState(State):
     def __init__(self, screen_size, scores: tuple, completed_level: State):
 
-        self._score, self._high_score = scores
+        self._current_score, self._high_score = scores
         self._completed_level = completed_level
         self._level = self._completed_level.get_level()
 
@@ -348,23 +300,13 @@ class LevelCompleteState(State):
             data = json.load(file_handle)
             super().__init__(screen_size, data)
             self._create_buttons()
-            self._create_texts()
 
-        new_text = self._score_text.get_initial_text() + f' {self._score:^5}'
-        self._score_text.set_text(new_text)
-
-        initial_text = self._high_score_text.get_initial_text()
-        new_text = initial_text + f' {self._high_score:^5}'
-        self._high_score_text.set_text(new_text)
+        self._update_score_labels()
 
     def _create_buttons(self):
         self._play_button = self._buttons_dict['play_button']
         self._retry_button = self._buttons_dict['retry_button']
         self._quit_button = self._buttons_dict['quit_button']
-
-    def _create_texts(self):
-        self._score_text = self._texts_dict['score_text']
-        self._high_score_text = self._texts_dict['high_score_text']
 
     def update(self, events):
         next_state = self
@@ -379,17 +321,14 @@ class LevelCompleteState(State):
 
     def draw(self, screen):
         self._completed_level.draw(screen)
-        middle_x, middle_y = self._screen_size / 2
-        x_offset = 450
-        y_offset = 450
 
-        left_top = (middle_x - x_offset, middle_y - y_offset)
-        right_top = (middle_x + x_offset, middle_y - y_offset)
-        left_bottom = (middle_x - x_offset, middle_y + y_offset)
-        right_bottom = (middle_x + x_offset, middle_y + y_offset)
+        overlay = pygame.Surface((self._screen_size.x / 2,
+                                  self._screen_size.y),
+                                 pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 215))
+        overlay_rect = overlay.get_rect()
+        overlay_rect.center = (self._screen_size / 2)
+        screen.blit(overlay, overlay_rect)
 
-        BLACK = (0, 0, 0)
-        points = [left_top, right_top, right_bottom, left_bottom]
-        pygame.draw.polygon(screen, BLACK, points)
         self._draw_objects(screen)
         self._draw_texts(screen)

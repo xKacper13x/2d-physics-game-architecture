@@ -33,7 +33,7 @@ class GameObject:
         return self._name
 
     def position(self):
-        return self._object_rect.center
+        return pygame.Vector2(self._object_rect.center)
 
     def _load_image(self, img_path, img_size=None):
         return helpers.load_image(img_path, img_size)
