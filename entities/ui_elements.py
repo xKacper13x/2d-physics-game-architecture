@@ -138,7 +138,6 @@ class Button(GameObject):
 class TextButton(Button):
     def __init__(self, object_data, screen_size: pygame.Vector2):
         super().__init__(object_data, screen_size)
-        super().__init__(object_data, screen_size)
 
         # To zabezpiecza przed pustą listą [], która prześlizgnęła się przez
         # initialize_buttons
