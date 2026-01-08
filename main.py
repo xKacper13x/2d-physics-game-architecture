@@ -81,10 +81,10 @@ class AngryKnightsApp:
     def _manage_states(self, result: str) -> State:
         """
         Centrala zarządzająca maszyną stanów.
-        Interpretuje otrzymane wyniki w postaci stringa
+        Interpretuje otrzymane wyniki w postaci stringa.
 
         Args:
-            result(str): Komenda sterująca stanami
+            result (str): Komenda sterująca stanami.
 
         Returns:
             State: Nowy obiekt stanu, który ma zostać aktywowany w następnej
@@ -143,7 +143,7 @@ class AngryKnightsApp:
 
         Wykrywa:
         - Zamknięcie programu: Przerywa pętlę.
-        - Wciśniecie klawisza F11: Zmienia tryb wyświetlania aplikacji
+        - Wciśniecie klawisza F11: Zmienia tryb wyświetlania aplikacji.
         """
         delta_time = 0.1
         while self._running:

@@ -62,19 +62,10 @@
             {
                 "name": "goblin_1",
                 "mass": 1,
-                "health": 150,
+                "health": 300,
                 "height": 150,
                 "pos_x": 1500,
                 "pos_y": 845,
-                "img_path": "assets/images/normal_goblin.png"
-            },
-            {
-                "name": "goblin_2",
-                "mass": 1,
-                "health": 150,
-                "height": 150,
-                "pos_x": 1500,
-                "pos_y": 590,
                 "img_path": "assets/images/normal_goblin.png"
             }
         ],

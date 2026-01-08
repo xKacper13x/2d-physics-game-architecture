@@ -29,7 +29,7 @@ class GameState(State):
             self._create_buttons()
 
         self._current_score = 0
-        self._update_score_labels()
+        self._update_score_labels(self._current_score, self._high_score)
 
         self._max_dis = self._slingshot.get_height() * 0.8
 
@@ -193,7 +193,8 @@ class GameState(State):
             if isinstance(obj, (Enemy, Structure)):
                 objects_to_kill = obj.update(objects_to_kill)
                 self._current_score += obj.collect_points()
-                self._update_score_labels()
+                self._update_score_labels(self._current_score,
+                                          self._high_score)
             else:
                 obj.update()
 
@@ -344,7 +345,8 @@ class LevelCompleteState(State):
             super().__init__(screen_size, data)
             self._create_buttons()
 
-        self._update_score_labels()
+        self._update_score_labels(self._current_score,
+                                  self._high_score)
 
     def get_completed_level_state(self) -> State:
         return self._completed_level
@@ -362,8 +364,10 @@ class LevelCompleteState(State):
         if self._play_button.is_clicked(events):
             if self._current_score > 0:
                 next_state = 'NEXT_LEVEL'
+            else:
+                next_state = 'RESTART_LEVEL'
         elif self._retry_button.is_clicked(events):
-            next_state = 'REPEAT_LEVEL'
+            next_state = 'RESTART_LEVEL'
         elif self._quit_button.is_clicked(events):
             next_state = "GO_TO_MENU"
         return next_state
