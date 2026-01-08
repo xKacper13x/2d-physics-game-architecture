@@ -73,9 +73,9 @@ class GameState(State):
         projectile = Projectile(self._space, data, self._slingshot_pos)
         return projectile
 
-    def _check_for_launch(self, events):
-        object_pos = self._current_projectile.position()
-        pull_vector = self._slingshot_pos - object_pos
+    def _perform_launch(self, events):
+        """Wydzielona logika obliczania wektora strzału."""
+        pull_vector = self._slingshot_pos - self._current_projectile.position()
 
         distance = math.dist(self._slingshot_pos,
                              self._current_projectile.position())
@@ -90,6 +90,9 @@ class GameState(State):
                     else:
                         self._current_projectile.go_to_start_pos()
                     self._dragged_object = None
+
+    def _check_for_launch(self, events):
+        self._perform_launch(events)
 
         is_ammo_dragged = self._current_projectile.is_dragged()
         if is_ammo_dragged or self._dragged_object is not None:
@@ -180,18 +183,8 @@ class GameState(State):
             pygame.draw.circle(screen, (255, 255, 255), curr_pos, radius)
             pygame.draw.circle(screen, (0, 0, 0), curr_pos, radius, 1)
 
-    def update(self, events: list) -> State:
-        self._space.step(1/60)
-
-        if not self._level_ended:
-            self._check_for_launch(events)
-
-        if self._current_projectile.is_on_sling(self._slingshot_pos,
-                                                self._max_dis):
-            self._object_on_sling = self._current_projectile
-        else:
-            self._object_on_sling = None
-
+    def _update_entities(self) -> None:
+        """Aktualizuje obiekty, zlicza punkty i usuwa zniszczone."""
         objects_to_kill = []
         for obj in self._objects:
             if isinstance(obj, (Enemy, Structure)):
@@ -204,8 +197,19 @@ class GameState(State):
         for obj in objects_to_kill:
             self._kill_object(obj)
 
-        if not self._enemies and not self._level_ended:
-            self._end_level()
+    def update(self, events: list) -> State:
+        self._space.step(1/60)
+
+        if not self._level_ended:
+            self._check_for_launch(events)
+
+        if self._current_projectile.is_on_sling(self._slingshot_pos,
+                                                self._max_dis):
+            self._object_on_sling = self._current_projectile
+        else:
+            self._object_on_sling = None
+
+        self._update_entities()
 
         if not self._current_projectile.is_on_sling(self._slingshot_pos,
                                                     self._max_dis):
@@ -219,6 +223,12 @@ class GameState(State):
                 if is_stopped or is_off_screen:
                     self._projectile_stopped = True
                     self._timer = 0
+
+        # Gdy wszystkie obiekty przeciwników zostały zniszczone
+        # i odliczanie do zakończenia poziomu nie zostało jeszcze uruchomione,
+        # rozpoczyna zakończenie poziomu
+        if not self._enemies and not self._level_ended:
+            self._end_level()
 
             self._timer += 1/60
             if self._projectile_stopped and self._timer >= 2:
