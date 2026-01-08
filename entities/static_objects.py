@@ -42,7 +42,7 @@ class Slingshot(GameObject):
 
 
 class Ground:
-    def __init__(self, screen_size: pygame.Vector2, y_pos: int, space) -> None:
+    def __init__(self, screen_size: pygame.Vector2, y_pos: int, space):
         self._width = 3 * screen_size[0]
         self._y_pos = y_pos
 

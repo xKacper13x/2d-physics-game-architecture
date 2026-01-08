@@ -4,7 +4,7 @@ import math
 
 
 class GameObject:
-    def __init__(self, object_data: dict) -> None:
+    def __init__(self, object_data: dict):
         self._name = object_data['name']
         self._img_path = object_data['img_path']
 

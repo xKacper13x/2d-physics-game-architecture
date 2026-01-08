@@ -5,7 +5,7 @@ import helpers
 
 class Text:
     def __init__(self, data: dict,
-                 surface: pygame.Vector2 | pygame.Rect) -> None:
+                 surface: pygame.Vector2 | pygame.Rect):
         self._surface = surface
         self._name = data.get('name', '')
 
