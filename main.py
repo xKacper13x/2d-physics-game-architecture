@@ -1,6 +1,8 @@
 from states.base_state import State
 from states.main_menu_state import MainMenuState
-from states.gameplay_states import GameState, PauseState, LevelCompleteState
+from states.game_state import GameState
+from states.pause_state import PauseState
+from states.level_complete_state import LevelCompleteState
 import pygame
 import sys
 import ctypes

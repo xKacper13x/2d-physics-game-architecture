@@ -11,7 +11,51 @@ import helpers
 
 
 class GameState(State):
-    def __init__(self, screen_size, level: int):
+    """
+    Stan gry reprezentujący poziomy gry.
+
+    Klasa ta odpowiada za:
+    - Zarządzanie obiektami fizycznymi, tworzenie, aktualizowanie,
+      rysowanie i niszczenie ich.
+    - Inicjalizowanie przestrzeni do obliczeń fizycznych.
+    - Określenie działania i zasad gry.
+    - Zarządzanie wejściem pobranym od użytkownika.
+
+    Attributes:
+        _ammo_pointer (int): Wskaźnik na aktualnie używany pocisk.
+        _level (int): Numer poziomu gry.
+        _space (pymunk.Space): Przestrzeń fizyczna symulacji.
+        _high_score (int): Zapisany w pliku konfiguracyjnym gry, rekord
+                           punktowy poziomu.
+
+        _current_score (int): Aktualnie uzyskany wynik punktowy.
+        _max_dis (int): Maksymalne możliwe naciągnięcie procy.
+        _projectile_stopped (bool): Flaga określająca, czy wystrzelony pocisk
+                                    przestał się poruszać.
+        _level_ended (bool): Flaga określająca, czy aktualny poziom
+                             zakończył się.
+        _timer (float): Stoper mierzący opóźnienie zakończenia poziomu i
+                        przejścia do kolejnego stanu
+        _wait_time (int): ustalone opóźnienie przejścia do kolejnego stanu.
+        _ground (Ground): Obiekt statycznego podłoża.
+        _enemies (list): Lista przeciwników.
+        _object_on_sling (Projectile): Pocisk aktualnie znajdujący się na
+                                       procy.
+        _dragged_object (Projectile): Pocisk aktualnie trzymany przez kursor.
+        _structures (list): Lista struktur.
+        _slingshot (Slingshot): Obiekt procy.
+    """
+    def __init__(self, screen_size: pygame.Vector2, level: int):
+        """
+        Inicjalizuje stan gry dla podanego poziomu.
+
+        Args:
+            screen_size (pygame.Vector2): Rozmiar okna gry.
+            level (int): Numer poziomu do załadowania.
+
+        Raises:
+            ValueError: Jeśli numer poziomu nie jest liczbą całkowitą.
+        """
         if not isinstance(level, int):
             raise ValueError('Level must be an integer')
         self._ammo_pointer = 0
@@ -31,29 +75,69 @@ class GameState(State):
         self._current_score = 0
         self._update_score_labels(self._current_score, self._high_score)
 
-        self._max_dis = self._slingshot.get_height() * 0.8
-
+        self._max_dis = int(self._slingshot.get_height() * 0.8)
         self._object_on_sling = self._current_projectile
         self._dragged_object = None
 
         self._projectile_stopped = False
         self._level_ended = False
         self._timer = 0
-        self._wait_time = 2.0
+        self._wait_time = 2
 
         self._ground = Ground(self._screen_size, 920, self._space)
 
-    def get_level(self):
+    def get_level(self) -> int:
+        """
+        Zwraca numer aktualnego poziomu.
+
+        Returns:
+            int: Numer poziomu.
+        """
         return self._level
 
-    def get_scores(self) -> tuple:
-        scores = (self._current_score, self._high_score)
-        return scores
+    def get_current_score(self) -> int:
+        """
+        Zwraca aktualny wynik gracza.
 
-    def _create_buttons(self):
+        Returns:
+            int: Liczba punktów.
+        """
+        return self._current_score
+
+    def get_high_score(self) -> int:
+        """
+        Zwraca najlepszy wynik (rekord) dla tego poziomu.
+
+        Returns:
+            int: Rekord punktowy.
+        """
+        return self._high_score
+
+    def get_scores(self) -> tuple:
+        """
+        Zwraca krotkę z wynikami (bieżący, rekord).
+
+        Returns:
+            tuple: (current_score, high_score).
+        """
+        return (self._current_score, self._high_score)
+
+    def _create_buttons(self) -> None:
+        """
+        Przypisuje przycisk do zmiennej
+        """
         self._pause_button = self._buttons_dict['pause_button']
 
-    def _initialize_objects(self, data):
+    def _initialize_objects(self, data: dict) -> list:
+        """
+        Inicjalizuje obiekty gry (proca, wrogowie, struktury) podanych danych.
+
+        Args:
+            data (dict): Słownik konfiguracyjny.
+
+        Returns:
+            list: Lista wszystkich obiektów do aktualizowania i rysowania.
+        """
         objects = super()._initialize_objects(data)
         data = data['objects']
 
@@ -72,11 +156,17 @@ class GameState(State):
         return objects + self._enemies + self._structures
 
     def _initialize_projectile(self) -> Projectile:
+        """
+        Tworzy nowy obiekt pocisku na podstawie danych konfiguracyjnych.
+
+        Returns:
+            Projectile: Nowy obiekt pocisku.
+        """
         data = self._projectiles_data[self._ammo_pointer]
         projectile = Projectile(self._space, data, self._slingshot_pos)
         return projectile
 
-    def _handle_mouse_release(self, events):
+    def _handle_mouse_release(self, events: list) -> None:
         """Sprawdza, czy gracz puścił mysz, aby wystrzelić pocisk."""
         for event in events:
             if event.type == pygame.MOUSEBUTTONUP:
@@ -84,8 +174,10 @@ class GameState(State):
                     self._perform_launch()
                 self._dragged_object = None
 
-    def _perform_launch(self):
-        """Wydzielona logika obliczania wektora strzału."""
+    def _perform_launch(self) -> None:
+        """
+        Oblicza wektor siły i wystrzeliwuje pocisk z procy.
+        """
         start_pos = self._current_projectile.position()
         pull_vector = self._slingshot_pos - start_pos
 
@@ -99,7 +191,13 @@ class GameState(State):
         else:
             self._current_projectile.go_to_start_pos()
 
-    def _check_for_launch(self, events):
+    def _check_for_launch(self, events: list) -> None:
+        """
+        Obsługuje logikę myszy (chwytanie, ciągnięcie, puszczanie procy).
+
+        Args:
+            events (list): Lista zdarzeń Pygame.
+        """
         # obsluga puszczenia myszy(strzal lub reset)
         self._handle_mouse_release(events)
 
@@ -107,22 +205,17 @@ class GameState(State):
         if is_ammo_dragged or self._dragged_object is not None:
             self._dragged_object = self._current_projectile
             self._dragged_object.drag(self._slingshot_pos, self._max_dis)
+        # Zabezpieczenie: jeśli nie trzymamy przycisku, puszczamy obiekt
         elif not pygame.mouse.get_pressed()[0]:
             self._dragged_object = None
 
-    def _draw_objects(self, screen):
-        if self._object_on_sling is not None:
-            rubber_anchor = self._object_on_sling.get_rubber_anchor()
-            self._slingshot.draw_inner_rubber(screen,
-                                              rubber_anchor)
-            super()._draw_objects(screen)
-            self._slingshot.draw_outer_rubber(screen,
-                                              rubber_anchor)
-        else:
-            self._slingshot.draw_outer_rubber(screen)
-            super()._draw_objects(screen)
-
     def _kill_object(self, obj_to_remove: PhysicalObject) -> None:
+        """
+        Usuwa obiekt fizyczny z gry i symulacji.
+
+        Args:
+            obj (PhysicalObject): Obiekt do usunięcia.
+        """
         space_bodies = self._space.bodies
         if obj_to_remove._body in space_bodies:
             self._space.remove(obj_to_remove._body, obj_to_remove._shape)
@@ -131,13 +224,20 @@ class GameState(State):
         if isinstance(obj_to_remove, Enemy):
             self._enemies.remove(obj_to_remove)
 
-    def _end_level(self):
+    def _end_level(self) -> None:
+        """
+        Rozpoczyna zakończenie poziomu. Zaznacza poziom jako zakończony
+        i resetuje wynik w przypadku porażki.
+        """
         if self._enemies:
             self._current_score = 0
         self._timer = 0
         self._level_ended = True
 
-    def save_high_score(self):
+    def save_high_score(self) -> None:
+        """
+        Zapisuje najlepszy wynik do pliku konfiguracyjnego.
+        """
         path = f'objects_config_files/level{self._level}.json'
         if self._current_score > self._high_score:
             self._high_score = self._current_score
@@ -150,7 +250,13 @@ class GameState(State):
         with open(path, 'w') as file_handle:
             json.dump(data, file_handle, indent=4)
 
-    def _draw_trajectory(self, screen):
+    def _draw_trajectory(self, screen: pygame.Surface):
+        """
+        Rysuje celownik(przewidywaną trajektorię lotu pocisku).
+
+        Args:
+            screen (pygame.Surface): ekran docelowy
+        """
         if self._dragged_object is None:
             return
 
@@ -186,6 +292,24 @@ class GameState(State):
             pygame.draw.circle(screen, (255, 255, 255), curr_pos, radius)
             pygame.draw.circle(screen, (0, 0, 0), curr_pos, radius, 1)
 
+    def _draw_objects(self, screen: pygame.Surface):
+        """
+        Rysuje obiekty gry z uwzględnieniem warstw procy (przód/tył).
+
+        Args:
+            screen (pygame.Surface): ekran docelowy
+        """
+        if self._object_on_sling is not None:
+            rubber_anchor = self._object_on_sling.get_rubber_anchor()
+            self._slingshot.draw_inner_rubber(screen,
+                                              rubber_anchor)
+            super()._draw_objects(screen)
+            self._slingshot.draw_outer_rubber(screen,
+                                              rubber_anchor)
+        else:
+            self._slingshot.draw_outer_rubber(screen)
+            super()._draw_objects(screen)
+
     def _update_entities(self) -> None:
         """Aktualizuje obiekty, zlicza punkty i usuwa zniszczone."""
         objects_to_kill = []
@@ -201,17 +325,18 @@ class GameState(State):
         for obj in objects_to_kill:
             self._kill_object(obj)
 
-    def _update_slingshot_status(self):
+    def _update_slingshot_status(self) -> None:
+        """Sprawdza, czy pocisk znajduje się na procy."""
         if self._current_projectile.is_on_sling(self._slingshot_pos,
                                                 self._max_dis):
             self._object_on_sling = self._current_projectile
         else:
             self._object_on_sling = None
 
-    def _update_projectile_status(self):
+    def _update_projectile_status(self) -> None:
         """
-        Sprawdza, czy wystrzelony pocisk się zatrzymał
-        lub wyleciał poza ekran.
+        Zarządza cyklem życia pocisku po wystrzale.
+        Wykrywa zatrzymanie lub wylot poza ekran i przygotowuje kolejny strzał.
         """
         if self._current_projectile.is_on_sling(self._slingshot_pos,
                                                 self._max_dis):
@@ -231,17 +356,43 @@ class GameState(State):
                 # Reset timera dla opoźnienia zakończenia poziomu
                 self._timer = 0
 
-    def _handle_input(self, events):
-        result = self
+    def _handle_input(self, events: list) -> str:
+        """
+        Sprawdza kliknięcie przycisku pauzy lub klawisza ESC.
+
+        Args:
+            events (list): Lista zdarzeń Pygame.
+
+        Returns:
+            str: Komenda sterująca, informująca o następnym stanie.
+        """
+        result = 'STAY'
         if self._pause_button.is_clicked(events):
             result = 'PAUSE_GAME'
 
         for event in events:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                result = PauseState(self._screen_size, self)
+                result = 'PAUSE_GAME'
         return result
 
-    def update(self, events: list) -> State:
+    def update(self, events: list) -> str:
+        """
+        Główna metoda aktualizacji poziomu gry.
+        - Krok fizyki
+        - Sprawdzenie i obsługa strzału.
+        - Aktualizacja statusu procy.
+        - Aktualizacja wrogów i struktur.
+        - Zarządzanie pociskami.
+        - Obsługa zmiany pocisku.
+        - Obsługa UI
+        - Sprawdzenie warunków końca poziomu.
+
+        Args:
+            events (list): lista zdarzeń Pygame.
+
+        Returns:
+            str: Komenda sterująca, informująca o następnym stanie.
+        """
         self._space.step(1/60)
 
         if not self._level_ended:
@@ -282,110 +433,13 @@ class GameState(State):
                 next_state = "END_LEVEL"
         return next_state
 
-    def draw(self, screen):
+    def draw(self, screen: pygame. Surface) -> None:
+        """
+        Rysuje cały stan gry.
+
+        Args:
+            screen (pygame.Surface): ekran docelowy
+        """
         super().draw(screen)
         self._draw_trajectory(screen)
         self._slingshot.draw(screen)
-
-
-class PauseState(State):
-    def __init__(self, screen_size: pygame.Vector2, paused_state: State):
-        self._paused_state = paused_state
-        with open('objects_config_files/pause.json') as file_handle:
-            data = json.load(file_handle)
-            super().__init__(screen_size, data)
-            self._create_buttons()
-
-    def get_paused_state(self) -> GameState:
-        return self._paused_state
-
-    def get_level(self) -> int:
-        return self._paused_state.get_level()
-
-    def _create_buttons(self):
-        self._play_button = self._buttons_dict['play_button']
-        self._retry_button = self._buttons_dict['retry_button']
-        self._settings_button = self._buttons_dict['settings_button']
-        self._quit_button = self._buttons_dict['quit_button']
-
-    def _handle_input(self, events: list) -> str:
-        if self._play_button.is_clicked(events):
-            return "UNPAUSE_GAME"
-        if self._retry_button.is_clicked(events):
-            return 'RESTART_LEVEL'
-        if self._settings_button.is_clicked(events):
-            pass
-        if self._quit_button.is_clicked(events):
-            return "GO_TO_MENU"
-
-        for event in events:
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                return "UNPAUSE_GAME"
-
-    def update(self, events: list) -> str:
-        next_state = self._handle_input(events)
-        return next_state
-
-    def draw(self, screen):
-        self._paused_state.draw(screen)
-        self._draw_objects(screen)
-
-
-class LevelCompleteState(State):
-    def __init__(self, screen_size: pygame.Vector2, completed_level: State):
-
-        scores = completed_level.get_scores()
-        self._current_score, self._high_score = scores
-        self._completed_level = completed_level
-        self._level = self._completed_level.get_level()
-
-        path = 'objects_config_files/level_summary.json'
-        with open(path, 'r') as file_handle:
-            data = json.load(file_handle)
-            super().__init__(screen_size, data)
-            self._create_buttons()
-
-        self._update_score_labels(self._current_score,
-                                  self._high_score)
-
-    def get_completed_level_state(self) -> State:
-        return self._completed_level
-
-    def get_level(self) -> State:
-        return self._level
-
-    def _create_buttons(self):
-        self._play_button = self._buttons_dict['play_button']
-        self._retry_button = self._buttons_dict['retry_button']
-        self._quit_button = self._buttons_dict['quit_button']
-
-    def _handle_input(self, events: list) -> str:
-        next_state = self
-        if self._play_button.is_clicked(events):
-            if self._current_score > 0:
-                next_state = 'NEXT_LEVEL'
-            else:
-                next_state = 'RESTART_LEVEL'
-        elif self._retry_button.is_clicked(events):
-            next_state = 'RESTART_LEVEL'
-        elif self._quit_button.is_clicked(events):
-            next_state = "GO_TO_MENU"
-        return next_state
-
-    def update(self, events):
-        next_state = self._handle_input(events)
-        return next_state
-
-    def draw(self, screen):
-        self._completed_level.draw(screen)
-
-        overlay = pygame.Surface((self._screen_size.x / 2,
-                                  self._screen_size.y),
-                                 pygame.SRCALPHA)
-        overlay.fill((0, 0, 0, 215))
-        overlay_rect = overlay.get_rect()
-        overlay_rect.center = (self._screen_size / 2)
-        screen.blit(overlay, overlay_rect)
-
-        self._draw_objects(screen)
-        self._draw_texts(screen)
