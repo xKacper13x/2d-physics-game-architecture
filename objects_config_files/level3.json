@@ -32,7 +32,7 @@
             "name": "slingshot",
             "height": 300,
             "pos_x": 260,
-            "pos_y": 770,
+            "pos_y": 820,
             "power": 18,
             "color_R": 169,
             "color_G": 64,
@@ -56,13 +56,21 @@
                 "radius": 32,
                 "img_path": "assets/images/rock.png",
                 "score": 0
+            },
+            {
+                "name": "kam",
+                "mass": 3,
+                "health": "inf",
+                "radius": 32,
+                "img_path": "assets/images/rock.png",
+                "score": 0
             }
         ],
         "enemies": [
             {
                 "name": "goblin_1",
                 "mass": 1,
-                "health": 250,
+                "health": 300,
                 "height": 150,
                 "pos_x": 1500,
                 "pos_y": 845,
@@ -71,10 +79,19 @@
             {
                 "name": "goblin_2",
                 "mass": 1,
-                "health": 250,
+                "health": 300,
                 "height": 150,
                 "pos_x": 1500,
                 "pos_y": 590,
+                "img_path": "assets/images/normal_goblin.png"
+            },
+            {
+                "name": "goblin_2",
+                "mass": 1,
+                "health": 300,
+                "height": 120,
+                "pos_x": 1000,
+                "pos_y": 850,
                 "img_path": "assets/images/normal_goblin.png"
             }
         ],
@@ -83,9 +100,9 @@
                 "name": "floor",
                 "mass": 2,
                 "health": 300,
-                "width": 600,
+                "width": 400,
                 "height": 50,
-                "pos_x": 1400,
+                "pos_x": 1500,
                 "pos_y": 690,
                 "img_path": "assets/images/structure2.png"
             },
@@ -107,6 +124,66 @@
                 "height": 200,
                 "pos_x": 1600,
                 "pos_y": 820,
+                "img_path": "assets/images/structure.png"
+            },
+            {
+                "name": "wall",
+                "mass": 1,
+                "health": 300,
+                "width": 50,
+                "height": 200,
+                "pos_x": 1400,
+                "pos_y": 565,
+                "img_path": "assets/images/structure.png"
+            },
+            {
+                "name": "wall",
+                "mass": 1,
+                "health": 300,
+                "width": 50,
+                "height": 200,
+                "pos_x": 1600,
+                "pos_y": 565,
+                "img_path": "assets/images/structure.png"
+            },
+            {
+                "name": "floor",
+                "mass": 2,
+                "health": 300,
+                "width": 400,
+                "height": 50,
+                "pos_x": 1500,
+                "pos_y": 440,
+                "img_path": "assets/images/structure2.png"
+            },
+            {
+                "name": "floor",
+                "mass": 2,
+                "health": 300,
+                "width": 320,
+                "height": 40,
+                "pos_x": 1000,
+                "pos_y": 748,
+                "img_path": "assets/images/structure2.png"
+            },
+            {
+                "name": "wall",
+                "mass": 1,
+                "health": 300,
+                "width": 40,
+                "height": 150,
+                "pos_x": 900,
+                "pos_y": 850,
+                "img_path": "assets/images/structure.png"
+            },
+            {
+                "name": "wall",
+                "mass": 1,
+                "health": 300,
+                "width": 40,
+                "height": 150,
+                "pos_x": 1100,
+                "pos_y": 850,
                 "img_path": "assets/images/structure.png"
             }
         ],

@@ -26,7 +26,6 @@ class Enemy(PhysicalObject):
             space (pymunk.Space): Przestrzeń fizyczna symulacji.
             object_data (dict): Słownik konfiguracyjny.
         """
-        self._pos = (object_data['pos_x'], object_data['pos_y'])
         super().__init__(space, object_data)
 
         self._create_physics(space)
@@ -51,7 +50,6 @@ class Enemy(PhysicalObject):
         self._body.position = self._pos
         self._shape = pymunk.Poly.create_box(self._body, (self._width * 0.8,
                                                           self._height))
-        print(type(self._shape))
         self._shape.friction = 0.5
         self._shape.elasticity = 0.1
         space.add(self._body, self._shape)

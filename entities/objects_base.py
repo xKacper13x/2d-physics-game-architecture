@@ -106,6 +106,7 @@ class PhysicalObject(GameObject):
         (musi być przypisane w klasie dziedziczącej).
         _last_angle (float): Kąt o jaki obiekt był obrócony
                              w poprzedniej klatce.
+        _pos (tuple): Pozycja obiektu na ekranie.
     """
     def __init__(self, space: pymunk.Space, object_data: dict):
         """
@@ -119,6 +120,11 @@ class PhysicalObject(GameObject):
         self._mass = object_data.get('mass', 1)
         self._mass = max(self._mass, 1)
         self._last_angle = 0.0
+
+        if 'pos_x' in object_data:
+            x_pos = object_data.get('pos_x', 0)
+            y_pos = object_data.get('pos_y', 0)
+            self._pos = (x_pos, y_pos)
 
         self._health = object_data.get('health', 100)
         if self._health == 'inf':
@@ -208,7 +214,7 @@ class PhysicalObject(GameObject):
                                              current_velocity.y)
 
         impact_force = impact_velocity.length
-        DAMAGE_THRESHOLD = 50
+        DAMAGE_THRESHOLD = 100
 
         if impact_force > DAMAGE_THRESHOLD:
             damage_to_deal = impact_force * 0.3

@@ -4,6 +4,7 @@ import pymunk
 import os
 import pytest
 
+
 # Nazwa tymczasowego obrazka
 TEMP_IMG = "test_img_temp.png"
 
@@ -91,7 +92,8 @@ def test_missing_data_error():
     }
 
     try:
-        # Oczekujemy, że helpers.load_image wyrzuci błąd lub pygame nie załaduje pliku
+        # Oczekujemy, że helpers.load_image wyrzuci błąd
+        # lub pygame nie załaduje pliku
         with pytest.raises(Exception):
             PhysicalObject(space, bad_data)
 

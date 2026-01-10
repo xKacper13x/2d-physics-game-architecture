@@ -18,7 +18,6 @@ class Structure(PhysicalObject):
             space (pymunk.Space): Przestrzeń fizyczna symulacji.
             object_data (dict): Słownik konfiguracyjny.
         """
-        self._pos = (object_data['pos_x'], object_data['pos_y'])
         super().__init__(space, object_data)
         self._mass = object_data['mass']
 
