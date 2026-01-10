@@ -1,7 +1,8 @@
+from entities.objects_base import PhysicalObject
 import pygame
 import pymunk
 import os
-from entities.objects_base import PhysicalObject
+import pytest
 
 # Nazwa tymczasowego obrazka
 TEMP_IMG = "test_img_temp.png"
