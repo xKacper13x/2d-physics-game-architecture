@@ -32,6 +32,9 @@ def check_size(size: int | float | tuple | pygame.Vector2 = 0) -> None:
         exceptions.InvalidConfigurationError: Jeśli rozmiar jest <= 0
                                               lub typ jest nieobsługiwany.
     """
+    if size is None:
+        msg = "No size provided."
+        raise exceptions.InvalidConfigurationError(msg)
     if isinstance(size, int) or isinstance(size, float):
         if size <= 0:
             msg = f"Size must be greater than zero. Provided: {size}"
@@ -48,7 +51,7 @@ def check_size(size: int | float | tuple | pygame.Vector2 = 0) -> None:
 
 # None oznacza, że zostawiamy oryginalny rozmiar
 def load_image(img_path: str, img_size:
-               (int | float | tuple | pygame.Vector2 | None)
+               (int | float | tuple | pygame.Vector2) = None
                ) -> pygame.Surface:
     """
     Bezpiecznie ładuje obrazek z dysku i opcjonalnie go skaluje.
@@ -69,9 +72,9 @@ def load_image(img_path: str, img_size:
     """
     try:
         check_path(img_path)
-        # .convert_alpha() może rzucić błąd, jeśli ekran nie jest zainicjowany
+
+        # Ładowanie obrazka
         if pygame.display.get_surface() is None:
-            # Bez konwersji, jeśli brak ekranu
             image = pygame.image.load(img_path)
         else:
             image = pygame.image.load(img_path).convert_alpha()
@@ -79,13 +82,15 @@ def load_image(img_path: str, img_size:
     except (exceptions.MissingResourceError, pygame.error, FileNotFoundError):
         return create_placeholder(img_size)
 
+    # LOGIKA SKALOWANIA - Wykonujemy tylko jeśli podano rozmiar
     if img_size is not None:
         try:
             check_size(img_size)
+
             final_width = 0
             final_height = 0
 
-            # Skalowanie proporcjonalne (podana tylko wysokość jako int)
+            # Skalowanie proporcjonalne (podana tylko wysokość jako int/float)
             if isinstance(img_size, (int, float)):
                 height = image.get_height()
                 if height != 0:
@@ -103,7 +108,8 @@ def load_image(img_path: str, img_size:
             image = pygame.transform.scale(image, (final_width, final_height))
 
         except (ValueError, TypeError, exceptions.InvalidConfigurationError):
-            # Zwróci obraz w oryginalnym rozmiarze
+            # W razie błędnego rozmiaru, zwracamy oryginał (lub placeholder)
+            # Tutaj decydujemy się po prostu pominąć skalowanie
             pass
 
     return image
@@ -139,6 +145,10 @@ def create_placeholder(
                     safe_h = int(size[1])
                     if safe_w > 0 and safe_h > 0:
                         w, h = safe_w, safe_h
+
+            elif isinstance(size, int, float):
+                if len(size) >= 2:
+                    w, h = size, size
 
     except (ValueError, TypeError, AttributeError):
         # Jeśli cokolwiek pójdzie nie tak przy odczycie rozmiaru,

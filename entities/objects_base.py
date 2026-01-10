@@ -2,6 +2,7 @@ import pygame
 import helpers
 import math
 import pymunk
+import exceptions
 
 
 class GameObject:
@@ -31,13 +32,13 @@ class GameObject:
                 - 'width' (opcjonalnie): Szerokość do skalowania.
                 - 'radius' (opcjonalnie): Promień (jeśli obiekt jest kołem).
         """
-        self._name = object_data['name']
-        self._img_path = object_data['img_path']
+        self._name = object_data.get('name', '')
+        self._img_path = object_data.get('img_path', '')
 
         if 'height' in object_data:
             self._height = int(object_data['height'])
             if 'width' in object_data:
-                self._width = int(object_data['width'])
+                self._width = int(object_data.get('width', None))
                 self._size = (self._width, self._height)
                 self._image = self._load_image(self._img_path, self._size)
             else:
@@ -45,11 +46,14 @@ class GameObject:
                 self._width = self._image.get_width()
                 self._size = (self._width, self._height)
         else:
-            self._radius = int(object_data['radius'])
+            self._radius = int(object_data.get('radius', 0))
             diameter = int(2*self._radius)
             self._size = (diameter, diameter)
+            try:
+                helpers.check_size(self._size)
+            except exceptions.InvalidConfigurationError:
+                self._size = None
 
-            helpers.check_size(self._size)
             self._image = self._load_image(self._img_path, self._size)
 
         self._object_rect = self._image.get_rect()
@@ -100,6 +104,8 @@ class PhysicalObject(GameObject):
         _score (int): Punkty zgromadzone za niszczenie tego obiektu.
         _body (pymunk.Body): Ciało fizyczne
         (musi być przypisane w klasie dziedziczącej).
+        _last_angle (float): Kąt o jaki obiekt był obrócony
+                             w poprzedniej klatce.
     """
     def __init__(self, space: pymunk.Space, object_data: dict):
         """
@@ -110,12 +116,13 @@ class PhysicalObject(GameObject):
             object_data (dict): Konfiguracja (masa, zdrowie, grafika).
         """
         self._space = space
-        self._mass = object_data['mass']
+        self._mass = object_data.get('mass', 1)
+        self._mass = max(self._mass, 1)
+        self._last_angle = 0.0
 
-        if object_data['health'] == 'inf':
+        self._health = object_data.get('health', 100)
+        if self._health == 'inf':
             self._health = math.inf
-        else:
-            self._health = object_data['health']
 
         super().__init__(object_data)
         self._score = 0
@@ -201,7 +208,7 @@ class PhysicalObject(GameObject):
                                              current_velocity.y)
 
         impact_force = impact_velocity.length
-        DAMAGE_THRESHOLD = 300
+        DAMAGE_THRESHOLD = 50
 
         if impact_force > DAMAGE_THRESHOLD:
             damage_to_deal = impact_force * 0.3
@@ -211,7 +218,7 @@ class PhysicalObject(GameObject):
             self._health = 0
             self._score += 700
 
-        if self._health == 0:
+        if self._health <= 0:
             objects_to_kill.append(self)
         return objects_to_kill
 
@@ -225,7 +232,11 @@ class PhysicalObject(GameObject):
         angle = self._body.angle
         angle = -1 * math.degrees(angle)
 
-        self._image = pygame.transform.rotate(self._original_image, angle)
+        # W celu optymalizacji gry, wykonuje transform,
+        # tylko jeżeli obiekt się obrócił.
+        if abs(angle - self._last_angle) > 1.0:
+            self._image = pygame.transform.rotate(self._original_image, angle)
+            self._last_angle = angle
 
         pos = self._body.position
         self._object_rect = self._image.get_rect(center=(pos.x, pos.y))

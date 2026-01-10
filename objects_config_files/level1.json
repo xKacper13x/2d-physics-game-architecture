@@ -2,7 +2,7 @@
     "background_img": "assets/images/Level1_bg.png",
     "gravity_x": 0,
     "gravity_y": 900,
-    "high_score": 6438,
+    "high_score": 0,
     "texts": [
         {
             "name": "score_text",
@@ -62,7 +62,7 @@
             {
                 "name": "goblin_1",
                 "mass": 1,
-                "health": 150,
+                "health": 250,
                 "height": 150,
                 "pos_x": 1500,
                 "pos_y": 845,
@@ -71,7 +71,7 @@
             {
                 "name": "goblin_2",
                 "mass": 1,
-                "health": 150,
+                "health": 250,
                 "height": 150,
                 "pos_x": 1500,
                 "pos_y": 590,
@@ -82,7 +82,7 @@
             {
                 "name": "floor",
                 "mass": 2,
-                "health": 10000,
+                "health": 300,
                 "width": 600,
                 "height": 50,
                 "pos_x": 1400,
@@ -92,7 +92,7 @@
             {
                 "name": "wall",
                 "mass": 1,
-                "health": 10000,
+                "health": 300,
                 "width": 50,
                 "height": 200,
                 "pos_x": 1400,
@@ -102,7 +102,7 @@
             {
                 "name": "wall",
                 "mass": 1,
-                "health": 10000,
+                "health": 300,
                 "width": 50,
                 "height": 200,
                 "pos_x": 1600,
