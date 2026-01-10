@@ -2,7 +2,7 @@
     "background_img": "assets/images/Level1_bg.png",
     "gravity_x": 0,
     "gravity_y": 900,
-    "high_score": 5757,
+    "high_score": 6438,
     "texts": [
         {
             "name": "score_text",
@@ -87,7 +87,7 @@
                 "height": 50,
                 "pos_x": 1400,
                 "pos_y": 690,
-                "img_path": "assets/images/rock.png"
+                "img_path": "assets/images/structure.png"
             },
             {
                 "name": "wall",
@@ -97,7 +97,7 @@
                 "height": 200,
                 "pos_x": 1400,
                 "pos_y": 820,
-                "img_path": "assets/images/rock.png"
+                "img_path": "assets/images/structure.png"
             },
             {
                 "name": "wall",
@@ -107,7 +107,7 @@
                 "height": 200,
                 "pos_x": 1600,
                 "pos_y": 820,
-                "img_path": "assets/images/rock.png"
+                "img_path": "assets/images/structure.png"
             }
         ],
         "buttons": [
