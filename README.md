@@ -1,93 +1,190 @@
 # My angry birds
-
-
-
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://gitlab-stud.elka.pw.edu.pl/kkrzyzew/my-angry-birds.git
-git branch -M main
-git push -uf origin main
-```
-
-## Integrate with your tools
-
-- [ ] [Set up project integrations](https://gitlab-stud.elka.pw.edu.pl/kkrzyzew/my-angry-birds/-/settings/integrations)
-
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
+# Author
+Kacper Krzyżewski
+Numer indeksu: 343027
 
 ## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+Projekt zaliczeniowy jest grą wzorowaną na jednej z najpopularniejszych gier - Angry Birds. Oparty jest na symulacji fizycznej 2D, odwzorowującej mechanikę znanej gry zręcznościowej. Celem projektu jest demonstracja wykorzystania języka Python w połączeniu z silnikiem fizycznym Pymunk oraz biblioteką graficzną Pygame. W przeciwieństwie do prostych gier typu "arcade", ten projekt stawia na realistyczną fizykę. Każdy obiekt w grze – od drewnianej belki po przeciwnika – posiada masę, tarcie, sprężystość i moment bezwładności. Dzięki temu konstrukcje walą się w sposób naturalny, a trajektoria lotu pocisków zależy od siły naciągu i grawitacji. Zaimplementowany został system celowania poprzez rysowanie przewidywanie trajektorii lotu pocisku znany z oryginalnej gry. Gra składa się z czterech poziomów, o narastającym poziomie trudności. Każdy z poziomów został opisany w swoim pliku konfiguracyjnym json, co oznacza, że aby gra miała więcej poziomów, wystarczy dodać kolejne pliki json w poprawnym formacie.
 
 ## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+![Rozgrywka w Angry Birds](assets/gameplay.gif)
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+## User Manual
+Aby uruchomić program należy zainstalować wszystkie potrzebne pakiety zdefiniowane w pliku requirements.txt(np. poleceniem w terminalu pip install -r requirements.txt). Po zainstalowaniu pakietów pozostaje uruchomić plik main.py. Po uruchomieniu wyświetli się menu główne gry, zawierające trzy przycisku:
+PLAY - uruchamia grę od pierwszego poziomu.
+OPTIONS - Przełącza tryb wyświetlania między oknem, a pełnym ekranem. (Ze względu na niską jakość grafik wygenerowanych przez Gemini zalecane jest granie w trybie okna, w celu maksymalizacji wrażeń wizualnych.).
+QUIT - Zamyka aplikację.
+Po wciśnięciu przycisku PLAY, rozpocznie się właściwa gra, składająca się z czterech poziomów, polegających na naciągnięciu procy w sposób pozwalający wystrzelonemu pociskowi trafić wszystkich przeciwników. Poziomy gry obsługują również dwa klawisze:
+- ESC - wstrzymuje grę i wyświetla menu pauzy, składające się z przycisków play, retry, settings(w aktualnej wersji gry nic nie robi) oraz quit level.
+- F11 - Przełącza tryb wyświetlania między oknem, a pełnym ekranem.
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+Poziom gry kończy się, gdy zostanie spełniony jeden z następujących warunków:
+- Wystrzelone zostaną wszystkie pociski - porażka, jeśli co najmniej jeden z przeciwników przetrwał, wtedy zerowane zostają punkty uzyskane w danej próbie.
+- Pokonani zostaną wszyscy przeciwnicy - zwycięstwo, sprawdzenie i zapis rekordu punktowego.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+Po zakończeniu poziomu wyświetlony zostaje ekran podsumowania zawierający informacje o punktach uzyskanych w danej próbie, rekordzie punktowym w danym poziomie. Stan ten daje możliwość przejście do kolejnego poziomu, w przypadku zwycięstwa. Można również restartować poziom lub wyjść do głównego menu.
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+Po ukończeniu wszystkich poziomów, gracz zostaje przeniesiony do menu głównego, mając opcję rozpoczęcia gry na nowo.
+## Used Solutions
+Gra wykorzystuje system maszyny stanów, każdy ekran jest osobnym stanem, wykonującym swoją logikę oraz przekazującym informacje o kolejnym stanie do menedżera gry.
+Klasy:
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+AngryKnightsApp (main.py):
+    Główna klasa aplikacji zarządzająca cyklem życia gry 'Angry Knights'.
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+    Klasa ta odpowiada za:
+    - Inicjalizację biblioteki Pygame i okna gry.
+    - Obsługę głównej pętli (game loop).
+    - Przechwytywanie globalnych zdarzeń (np. zamknięcie okna,
+                                        przełączenie pełnego ekranu).
+    - Zarządzanie maszyną stanów (przełączanie między Menu, Grą, Pauzą itp)
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+Folder states:
+    State(base_state.py):
+        Bazowa klasa Stanu gry.
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+        Klasa ta zarządza wspólnymi elementami dla wszystkich stanów:
+        - pobiera dane z pliku konfiguracyjnego json
+        - ustawia tło stanu
+        - tworzy podstawowe obiekty gry i rysuje je
+        - aktualizuje wyniki
 
-## License
-For open source projects, say how it is licensed.
+    Klasy dziedziczące ze State:
+        MainMenuState(main_menu_state.py):
+            Stan gry reprezentujący menu główne.
+            Zarządza interakcją z użytkownikiem przed rozpoczęciem rozgrywki.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+            Posiada trzy przyciski, które obsługuje:
+            - wciśnięcie przycisku 'play' uruchamia pierwszy poziom gry
+            - wciśnięcie przycisku 'options' przełącza tryb wyświetlania
+                między oknem a pełnym ekranem (Fullscreen).
+            - wciśnięcie przycisku 'quit' zamyka program
+
+        GameState(game_state.py):
+            Stan gry reprezentujący poziomy gry.
+
+            Klasa ta odpowiada za:
+            - Zarządzanie obiektami fizycznymi, tworzenie, aktualizowanie,
+            rysowanie i niszczenie ich.
+            - Inicjalizowanie przestrzeni do obliczeń fizycznych.
+            - Określenie działania i zasad gry.
+            - Zarządzanie wejściem pobranym od użytkownika.
+
+        LevelCompleteState(level_complete_state.py):
+            Stan podsumowania poziomu.
+
+            Wyświetlany po zakończeniu poziomu rozgrywki.
+            Prezentuje wynik punktowy, high score oraz umożliwia przejście dalej,
+            restart lub wyjście.
+
+        PauseState(pause_state.py):
+            Stan gry reprezentujący menu pauzy.
+
+            Jest to stan nakładkowy (Overlay), co oznacza, że jest wyświetlany
+            "na wierzchu" zatrzymanej rozgrywki, nie usuwając jej z pamięci.
+
+Folder entities:
+    GameObject(object_base.py):
+        Podstawowa klasa dla wszystkich obiektów wizualnych w grze.
+
+        Odpowiada za wczytanie grafiki, skalowanie oraz rysowanie obiektu
+        na ekranie.
+
+    Klasy dziedziczące z GameObject:
+        Slingshot(static_objects.py)
+            Klasa reprezentująca procę (wyrzutnię).
+
+            Odpowiada za:
+            - Wyświetlanie grafiki procy.
+            - Rysowanie gumy (cięciwy).
+            - Przechowywanie informacji o sile naciągu.
+
+        Button(ui_elements.py)
+            Klasa reprezentująca interaktywny przycisk.
+            Poza elementami Gameobject, dodaje obsługę kliknięć myszą.
+
+            Klasy dziedziczące z Button:
+                TextButton(ui_elements.py):
+                    Przycisk z napisem w środku.
+                    Rozszerza klasę Button o obiekt Text wyśrodkowany względem przycisku.
+
+        PhysicalObject(object_base.py):
+            Klasa rozszerzająca GameObject o właściwości fizyczne (Pymunk).
+
+            Obsługuje:
+            - Masę, zdrowie i zadawanie obrażeń przy zderzeniach.
+            - Synchronizację pozycji graficznej z ciałem fizycznym (Pymunk Body).
+            - Rotację grafiki zgodnie z fizyką.
+            - Zliczanie punktów za uszkodzenia.
+
+            Klasy dziedziczące z PhysicalObject:
+                Enemy(enemy.py):
+                    Klasa reprezentująca przeciwnika w grze.
+
+                    Dziedziczy po PhysicalObject, więc posiada fizykę, zdrowie i grafikę.
+                    Dodatkowo implementuje logikę natychmiastowej śmierci przy kontakcie
+                    z pociskiem gracza.
+
+                Projectile(projectile.py):
+                    Klasa reprezentująca pocisk (kamień) wystrzeliwanego z procy.
+
+                    Obsługuje:
+                    - Przeciąganie myszką (naciąganie procy).
+                    - Fizykę lotu (po wystrzeleniu).
+                    - Wykrywanie momentu opuszczenia procy (dla animacji gumy).
+                    - Obliczanie punktu zaczepienia gumy.
+
+                Structure(structure.py):
+                    Klasa reprezentująca element konstrukcyjny (blok, skrzynka, belka).
+
+                    Są to obiekty fizyczne, które tworzą budowle chroniące przeciwników.
+                    Mogą zostać zniszczone przez uderzenie, posiadają masę i tarcie.
+
+    Text:
+        Klasa reprezentująca element tekstowy w grze.
+
+        Odpowiada za renderowanie tekstu, obsługę czcionek, kolorów
+        oraz pozycjonowanie względem ekranu lub innego obiektu (np. przycisku).
+
+    Ground:
+    Klasa reprezentująca fizyczne podłoże (ziemię).
+    Jest to obiekt niewidoczny, ale posiadający
+    fizyczne właściwości (kolizje), które zapobiegają spadaniu obiektów
+    w nieskończoność.
+
+## Project Evaluation & Reflection
+1. Podsumowanie zrealizowanych prac
+Projekt udało się doprowadzić do etapu w pełni grywalnego prototypu. Zrealizowano kluczowe mechaniki:
+
+Silnik fizyczny: Pomyślna integracja biblioteki Pymunk z warstwą wizualną Pygame. Obiekty posiadają masę, tarcie i reagują na grawitację w sposób realistyczny.
+
+System UI: Zamiast gotowych bibliotek, zaimplementowano własny, lekki system interfejsu (klasy Button, TextButton, Text), co pozwoliło na pełną kontrolę nad wyglądem menu.
+
+Architektura kodu: Zastosowano podejście obiektowe z podziałem na klasy bazowe (GameObject, PhysicalObject) i dziedziczące (Enemy, Structure), co ułatwia dodawanie nowych elementów.
+
+Odporność: System ładowania zasobów (helpers.py) został zabezpieczony przed awarią – gra nie wyłącza się przy braku plików graficznych, lecz stosuje "placeholdery", co znacznie ułatwia debugowanie.
+
+Testy jednostkowe: Kluczowe moduły pomocnicze oraz elementy UI zostały pokryte testami z wykorzystaniem frameworka pytest, co pozwoliło wyeliminować błędy.
+
+2. Czego nie udało się osiągnąć i dlaczego
+Mimo realizacji głównego celu, pewne elementy zostały pominięte ze względu na ograniczenia czasowe lub priorytetyzację kluczowych funkcjonalności:
+
+System zapisu i wielu poziomów: Pierwotnie planowano edytor poziomów lub menu wyboru poziomu. Niestety ze względu na ograniczenia czasowe, gra wymusza liniowe przejście od pierwszego poziomu do ostatniego i nie umożliwia zapisania postępu(poza rekordem punktowym zapisywanym w pliku json).
+
+Udźwiękowienie: Gra nie posiada efektów dźwiękowych ani muzyki. Skupiono się na warstwie wizualnej i logicznej, traktując audio jako element drugoplanowy.
+
+3. Napotkane przeszkody i rozwiązania
+Podczas prac natrafiono na kilka istotnych problemów technicznych:
+
+Kąty Pymunk vs Pygame: Biblioteka fizyczna (Pymunk) liczy kąt obrotu w przeciwną stronę do biblioteki wizualnej (Pygame), oraz w innej jednostce(pymunk - radiany, pygame - stopnie). Problem został rozwiązany poprzez mnożenie przez -1 i zmiane jednostek przed przekazaniem obrazu do obrotu.
+
+4. Zmiany w stosunku do planowanego rozwiązania
+Projekt ewoluował w trakcie implementacji:
+
+Odejście od róznorodności pocisków: W oryginalnej grze Angry birds użytkownik ma do wyboru wiele rodzajów ptaków o różnych zdolnościach specjalnych. Niestety ze względu na ograniczenia czasowe nie udało się zaimplementować analogicznego systemu pocisków specjalnych.
+
+Nie udało się zrobić opisanego wcześniej menu wyboru poziomu gry.
+
+Odejście od gotowych bibliotek UI: Zrezygnowano z użycia pygame_gui na rzecz własnej implementacji. Choć zajęło to więcej czasu, pozwoliło na lepsze zrozumienie obsługi zdarzeń myszy i kolizji w pętli gry.
+
+Zarządzanie błędami: Początkowo gra miała zgłaszać wyjątek przy braku pliku. Zmieniono to na system "Silent Fail" z placeholderami (różowe kwadraty), co pozwala na pracę nad kodem nawet bez dostępu do finalnych grafik.
