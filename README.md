@@ -10,7 +10,7 @@ Projekt stanowi implementację gry opartej na mechanice znanej z kultowego tytu�
 ![Rozgrywka](./assets/Gameplay.gif)
 
 ## User Manual
-Aby uruchomić program należy zainstalować wszystkie potrzebne pakiety zdefiniowane w pliku requirements.txt(np. poleceniem w terminalu pip install -r requirements.txt). Po zainstalowaniu pakietów pozostaje uruchomić plik main.py. Po uruchomieniu wyświetli się menu główne gry, zawierające trzy przycisku:
+Aby uruchomić program należy zainstalować wszystkie potrzebne pakiety zdefiniowane w pliku requirements.txt(np. poleceniem w terminalu pip install -r requirements.txt). Po zainstalowaniu pakietów pozostaje uruchomić plik main.py(znajdując się w tym samym folderze, co podany plik. W przeciwnym razie występuje FileNotFoundError(No such file or directory:...)). Po uruchomieniu wyświetli się menu główne gry, zawierające trzy przycisku:
 PLAY - uruchamia grę od pierwszego poziomu.
 OPTIONS - Przełącza tryb wyświetlania między oknem, a pełnym ekranem. (Ze względu na niską jakość grafik wygenerowanych przez Gemini zalecane jest granie w trybie okna, w celu maksymalizacji wrażeń wizualnych.).
 QUIT - Zamyka aplikację.
