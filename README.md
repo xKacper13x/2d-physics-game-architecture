@@ -7,7 +7,7 @@ Numer indeksu: 343027
 Projekt zaliczeniowy jest grą wzorowaną na jednej z najpopularniejszych gier - Angry Birds. Oparty jest na symulacji fizycznej 2D, odwzorowującej mechanikę znanej gry zręcznościowej. Celem projektu jest demonstracja wykorzystania języka Python w połączeniu z silnikiem fizycznym Pymunk oraz biblioteką graficzną Pygame. W przeciwieństwie do prostych gier typu "arcade", ten projekt stawia na realistyczną fizykę. Każdy obiekt w grze – od drewnianej belki po przeciwnika – posiada masę, tarcie, sprężystość i moment bezwładności. Dzięki temu konstrukcje walą się w sposób naturalny, a trajektoria lotu pocisków zależy od siły naciągu i grawitacji. Zaimplementowany został system celowania poprzez rysowanie przewidywanie trajektorii lotu pocisku znany z oryginalnej gry. Gra składa się z czterech poziomów, o narastającym poziomie trudności. Każdy z poziomów został opisany w swoim pliku konfiguracyjnym json, co oznacza, że aby gra miała więcej poziomów, wystarczy dodać kolejne pliki json w poprawnym formacie.
 
 ## Visuals
-![Rozgrywka](./assets/gameplay.gif)
+![Rozgrywka](./assets/Gameplay.gif)
 
 ## User Manual
 Aby uruchomić program należy zainstalować wszystkie potrzebne pakiety zdefiniowane w pliku requirements.txt(np. poleceniem w terminalu pip install -r requirements.txt). Po zainstalowaniu pakietów pozostaje uruchomić plik main.py. Po uruchomieniu wyświetli się menu główne gry, zawierające trzy przycisku:
