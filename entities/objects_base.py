@@ -64,7 +64,7 @@ class GameObject:
         return self._name
 
     def position(self) -> pygame.Vector2:
-        """ Zwraca sktualną pozycję środka obiektu"""
+        """Zwraca sktualną pozycję środka obiektu"""
         return pygame.Vector2(self._object_rect.center)
 
     def _load_image(self, img_path: str,
@@ -176,7 +176,7 @@ class PhysicalObject(GameObject):
         """
         max_x = screen_size[0]
         off_screen = False
-        if self._body.position.x > max_x + 300 or self._body.position.x < -300:
+        if self._body.position.x > max_x + 150 or self._body.position.x < -150:
             off_screen = True
 
         return off_screen

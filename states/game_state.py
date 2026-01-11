@@ -84,7 +84,7 @@ class GameState(State):
         self._timer = 0
         self._wait_time = 2
 
-        self._ground = Ground(self._screen_size, 920, self._space)
+        self._ground = Ground(self._screen_size, 940, self._space)
 
     def get_level(self) -> int:
         """
@@ -260,8 +260,9 @@ class GameState(State):
         if self._dragged_object is None:
             return
 
+        sling_pos = pygame.Vector2(self._slingshot_pos)
         start_pos = pygame.Vector2(self._current_projectile.position())
-        diff = self._slingshot_pos - start_pos
+        diff = sling_pos - start_pos
         power = self._slingshot.get_power()
         impulse = diff * power
 
@@ -272,7 +273,7 @@ class GameState(State):
 
         # Symulacja trajektorii
         gravity = pygame.Vector2(self._space.gravity)
-        curr_pos = start_pos
+        curr_pos = sling_pos
         time_step = 0.12
         i = 1
 

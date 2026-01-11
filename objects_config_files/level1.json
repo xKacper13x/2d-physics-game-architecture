@@ -65,7 +65,7 @@
                 "health": 250,
                 "height": 150,
                 "pos_x": 1500,
-                "pos_y": 845,
+                "pos_y": 865,
                 "img_path": "assets/images/normal_goblin.png"
             },
             {
@@ -74,7 +74,7 @@
                 "health": 250,
                 "height": 150,
                 "pos_x": 1500,
-                "pos_y": 590,
+                "pos_y": 610,
                 "img_path": "assets/images/normal_goblin.png"
             }
         ],
@@ -86,7 +86,7 @@
                 "width": 600,
                 "height": 50,
                 "pos_x": 1400,
-                "pos_y": 690,
+                "pos_y": 710,
                 "img_path": "assets/images/structure2.png"
             },
             {
@@ -96,7 +96,7 @@
                 "width": 50,
                 "height": 200,
                 "pos_x": 1400,
-                "pos_y": 820,
+                "pos_y": 840,
                 "img_path": "assets/images/structure.png"
             },
             {
@@ -106,7 +106,7 @@
                 "width": 50,
                 "height": 200,
                 "pos_x": 1600,
-                "pos_y": 820,
+                "pos_y": 840,
                 "img_path": "assets/images/structure.png"
             }
         ],

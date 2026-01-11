@@ -54,7 +54,7 @@ class Slingshot(GameObject):
     def draw_outer_rubber(self, screen: pygame.Surface,
                           projectile_pos: tuple | None = None) -> None:
         """
-        Rysuje tylną część gumy (tę, która powinna być ZA ptakiem).
+        Rysuje tylną część gumy (tę, która powinna być ZA pociskiem).
 
         Jeśli proca jest w spoczynku (projectile_pos is None),
         rysuje prostą linię między widełkami.
@@ -75,7 +75,7 @@ class Slingshot(GameObject):
     def draw_inner_rubber(self, screen: pygame.Surface,
                           projectile_pos: tuple) -> None:
         """
-        Rysuje przednią część gumy (tę, która powinna być PRZED ptakiem).
+        Rysuje przednią część gumy (tę, która powinna być PRZED pociskiem).
 
         Args:
             screen (pygame.Surface): Ekran docelowy.

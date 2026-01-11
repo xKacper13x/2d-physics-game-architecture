@@ -64,7 +64,7 @@
                 "mass": 1,
                 "health": 300,
                 "height": 150,
-                "pos_x": 1500,
+                "pos_x": 1350,
                 "pos_y": 865,
                 "img_path": "assets/images/normal_goblin.png"
             },
@@ -76,6 +76,24 @@
                 "pos_x": 1500,
                 "pos_y": 610,
                 "img_path": "assets/images/normal_goblin.png"
+            },
+            {
+                "name": "goblin_3",
+                "mass": 1,
+                "health": 300,
+                "height": 150,
+                "pos_x": 1650,
+                "pos_y": 865,
+                "img_path": "assets/images/normal_goblin.png"
+            },
+            {
+                "name": "goblin_4",
+                "mass": 1,
+                "health": 300,
+                "height": 150,
+                "pos_x": 1500,
+                "pos_y": 360,
+                "img_path": "assets/images/normal_goblin.png"
             }
         ],
         "structures": [
@@ -83,7 +101,7 @@
                 "name": "floor",
                 "mass": 2,
                 "health": 300,
-                "width": 400,
+                "width": 700,
                 "height": 50,
                 "pos_x": 1500,
                 "pos_y": 710,
@@ -95,7 +113,7 @@
                 "health": 300,
                 "width": 50,
                 "height": 200,
-                "pos_x": 1400,
+                "pos_x": 1500,
                 "pos_y": 840,
                 "img_path": "assets/images/structure.png"
             },
@@ -105,7 +123,7 @@
                 "health": 300,
                 "width": 50,
                 "height": 200,
-                "pos_x": 1600,
+                "pos_x": 1800,
                 "pos_y": 840,
                 "img_path": "assets/images/structure.png"
             },
@@ -115,8 +133,8 @@
                 "health": 300,
                 "width": 50,
                 "height": 200,
-                "pos_x": 1400,
-                "pos_y": 585,
+                "pos_x": 1200,
+                "pos_y": 840,
                 "img_path": "assets/images/structure.png"
             },
             {
@@ -125,7 +143,7 @@
                 "health": 300,
                 "width": 50,
                 "height": 200,
-                "pos_x": 1600,
+                "pos_x": 1650,
                 "pos_y": 585,
                 "img_path": "assets/images/structure.png"
             },
@@ -138,6 +156,16 @@
                 "pos_x": 1500,
                 "pos_y": 460,
                 "img_path": "assets/images/structure2.png"
+            },
+            {
+                "name": "wall",
+                "mass": 1,
+                "health": 300,
+                "width": 50,
+                "height": 200,
+                "pos_x": 1350,
+                "pos_y": 585,
+                "img_path": "assets/images/structure.png"
             }
         ],
         "buttons": [

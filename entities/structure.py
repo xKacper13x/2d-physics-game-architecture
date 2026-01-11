@@ -8,7 +8,7 @@ class Structure(PhysicalObject):
 
     Są to obiekty fizyczne, które tworzą budowle chroniące przeciwników.
     Mogą zostać zniszczone przez uderzenie, posiadają masę i tarcie.
-    Dziedziczy rysowanie (sprite) po klasie PhysicalObject.
+    Dziedziczy rysowanie po klasie PhysicalObject.
     """
     def __init__(self, space: pymunk.Space, object_data: dict):
         """

@@ -5,7 +5,7 @@ import pymunk
 
 class Projectile(PhysicalObject):
     """
-    Klasa reprezentująca pocisk (ptaka) wystrzeliwanego z procy.
+    Klasa reprezentująca pocisk (kamień) wystrzeliwanego z procy.
 
     Obsługuje:
     - Przeciąganie myszką (naciąganie procy).
@@ -195,7 +195,7 @@ class Projectile(PhysicalObject):
 
         direction = slingshot_center - projectile_center
 
-        # Zabezpieczenie: jeśli ptak jest idealnie w środku procy (długość 0),
+        # Zabezpieczenie: jeśli pocisk jest idealnie w środku procy(długość 0),
         # zwracamy lewą stronę
         if direction.length() == 0:
             return self._object_rect.midleft
@@ -203,7 +203,7 @@ class Projectile(PhysicalObject):
         # Normalizacja: Skracamy wektor do długości 1, zachowując kierunek
         direction = direction.normalize()
 
-        # Mnożymy przez promień ptaka
+        # Mnożymy przez promień pocisku
         # Dzięki temu wektor sięga od środka idealnie do krawędzi
         anchor_vector = projectile_center - (direction * self._radius)
 
