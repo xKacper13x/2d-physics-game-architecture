@@ -146,10 +146,6 @@ def create_placeholder(
                     if safe_w > 0 and safe_h > 0:
                         w, h = safe_w, safe_h
 
-            elif isinstance(size, int, float):
-                if len(size) >= 2:
-                    w, h = size, size
-
     except (ValueError, TypeError, AttributeError):
         # Jeśli cokolwiek pójdzie nie tak przy odczycie rozmiaru,
         # ignorujemy to i zostajemy przy 50x50.
