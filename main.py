@@ -3,6 +3,7 @@ from states.main_menu_state import MainMenuState
 from states.game_state import GameState
 from states.pause_state import PauseState
 from states.level_complete_state import LevelCompleteState
+from core.signals import GameSignal
 import pygame
 import sys
 import ctypes
@@ -93,28 +94,28 @@ class AngryKnightsApp:
                    klatce, lub obecny stan, jeśli nie nastąpiła żadna zmiana.
         """
         # Obsluga Komend sterujących
-        if result == "GO_TO_MENU":
+        if result is GameSignal.GO_TO_MENU:
             state = MainMenuState(self._screen_size)
 
-        elif result == "START_GAME":
+        elif result is GameSignal.START_GAME:
             # Rozpoczęcie nowej gry od poziomu 1
             state = GameState(self._screen_size, 1)
 
-        elif result == "PAUSE_GAME":
+        elif result is GameSignal.PAUSE_GAME:
             # Zapauzowanie gry, przekazuje obecny stan do stanu pauzy,
             # żeby móc do niego wrócić
             state = PauseState(self._screen_size, self._state)
 
-        elif result == "UNPAUSE_GAME":
+        elif result is GameSignal.UNPAUSE_GAME:
             # wymaga y get_paused_state w stanie PauseState
             # Wraca do wstrzymanego momentu rozgrywki
             state = self._state.get_paused_state()
 
-        elif result == "END_LEVEL":
+        elif result is GameSignal.END_LEVEL:
             # Zakończenie poziomu i wyświetlenie jego podsumowania (wyniki)
             state = LevelCompleteState(self._screen_size, self._state)
 
-        elif result == "NEXT_LEVEL":
+        elif result is GameSignal.NEXT_LEVEL:
             # wymaga metody get_completed_level() w klasie LevelCompleteState
             current_level = self._state.get_level()
             try:
@@ -127,7 +128,7 @@ class AngryKnightsApp:
                 # ostatnim w grze, przechodzimy do menu głównego
                 state = MainMenuState(self._screen_size)
 
-        elif result == "RESTART_LEVEL":
+        elif result is GameSignal.RESTART_LEVEL:
             # Uruchamia ponownie właśnie zakończony poziom gry
             current_level = self._state.get_level()
             state = GameState(self._screen_size, current_level)

@@ -1,5 +1,6 @@
 from .base_state import State
-import json
+from services.base_service import BaseService
+from core.signals import GameSignal
 import pygame
 
 
@@ -31,12 +32,12 @@ class MainMenuState(State):
         Args:
             screen_size (pygame.Vector2): Rozmiar okna gry.
         """
-        with open('objects_config_files/menu.json') as file_handle:
-            data = json.load(file_handle)
-            super().__init__(screen_size, data)
-            self._create_buttons()
-            background_img_path = data["background_img"]
-            self._set_background(background_img_path)
+        service = BaseService()
+        data = service.load_data('menu.json')
+        super().__init__(screen_size, data)
+        self._create_buttons()
+        background_img_path = data["background_img"]
+        self._set_background(background_img_path)
 
     def _create_buttons(self) -> None:
         """
@@ -58,10 +59,10 @@ class MainMenuState(State):
         Returns:
             str: Komenda sterująca (np 'START_GAME', 'STAY')
         """
-        next_state = 'STAY'
+        next_state = GameSignal.STAY
 
         if self._play_button.is_clicked(events):
-            next_state = 'START_GAME'
+            next_state = GameSignal.START_GAME
 
         elif self._options_button.is_clicked(events):
             new_event = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_F11)

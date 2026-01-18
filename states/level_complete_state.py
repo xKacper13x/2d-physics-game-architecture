@@ -1,6 +1,7 @@
 from .base_state import State
+from core.signals import GameSignal
+from services.base_service import BaseService
 import pygame
-import json
 
 
 class LevelCompleteState(State):
@@ -38,11 +39,11 @@ class LevelCompleteState(State):
         self._completed_level = completed_level
         self._level = self._completed_level.get_level()
 
-        path = 'objects_config_files/level_summary.json'
-        with open(path, 'r') as file_handle:
-            data = json.load(file_handle)
-            super().__init__(screen_size, data)
-            self._create_buttons()
+        path = 'level_summary.json'
+        service = BaseService()
+        data = service.load_data(path)
+        super().__init__(screen_size, data)
+        self._create_buttons()
 
         self._update_score_labels(self._current_score,
                                   self._high_score)
@@ -85,16 +86,16 @@ class LevelCompleteState(State):
         Returns:
             str: Komenda sterująca zmianą stanu (lub 'STAY').
         """
-        next_state = self
+        next_state = GameSignal.STAY
         if self._play_button.is_clicked(events):
             if self._current_score > 0:
-                next_state = 'NEXT_LEVEL'
+                next_state = GameSignal.NEXT_LEVEL
             else:
-                next_state = 'RESTART_LEVEL'
+                next_state = GameSignal.RESTART_LEVEL
         elif self._retry_button.is_clicked(events):
-            next_state = 'RESTART_LEVEL'
+            next_state = GameSignal.RESTART_LEVEL
         elif self._quit_button.is_clicked(events):
-            next_state = "GO_TO_MENU"
+            next_state = GameSignal.GO_TO_MENU
         return next_state
 
     def update(self, events):

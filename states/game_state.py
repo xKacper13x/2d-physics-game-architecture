@@ -4,10 +4,10 @@ from entities.static_objects import Slingshot, Ground
 from entities.enemy import Enemy
 from entities.projectile import Projectile
 from entities.structure import Structure
+from services.level_service import LevelService
+from core.signals import GameSignal
 import pygame
 import pymunk
-import json
-import helpers
 
 
 class GameState(State):
@@ -62,15 +62,15 @@ class GameState(State):
         self._level = level
         self._space = pymunk.Space()
 
-        path = f'objects_config_files/level{self._level}.json'
-        with open(path, 'r') as file_handle:
-            data = json.load(file_handle)
-            super().__init__(screen_size, data)
-            self._space.gravity = (data['gravity_x'], data['gravity_y'])
-            self._high_score = data['high_score']
-            background_img_path = data["background_img"]
-            self._set_background(background_img_path)
-            self._create_buttons()
+        self._level_service = LevelService('objects_config_files')
+        data = self._level_service.load_data(f'level{level}.json')
+        self._space.gravity = self._level_service.physics_config
+        self._high_score = self._level_service.high_score
+
+        super().__init__(screen_size, data)
+        background_img_path = data["background_img"]
+        self._set_background(background_img_path)
+        self._create_buttons()
 
         self._current_score = 0
         self._update_score_labels(self._current_score, self._high_score)
@@ -234,22 +234,6 @@ class GameState(State):
         self._timer = 0
         self._level_ended = True
 
-    def save_high_score(self) -> None:
-        """
-        Zapisuje najlepszy wynik do pliku konfiguracyjnego.
-        """
-        path = f'objects_config_files/level{self._level}.json'
-        if self._current_score > self._high_score:
-            self._high_score = self._current_score
-
-        helpers.check_path(path)
-        with open(path, 'r') as file_handle:
-            data = json.load(file_handle)
-        data['high_score'] = max(self._current_score, self._high_score)
-
-        with open(path, 'w') as file_handle:
-            json.dump(data, file_handle, indent=4)
-
     def _draw_trajectory(self, screen: pygame.Surface):
         """
         Rysuje celownik(przewidywaną trajektorię lotu pocisku).
@@ -367,13 +351,13 @@ class GameState(State):
         Returns:
             str: Komenda sterująca, informująca o następnym stanie.
         """
-        result = 'STAY'
+        result = GameSignal.STAY
         if self._pause_button.is_clicked(events):
-            result = 'PAUSE_GAME'
+            result = GameSignal.PAUSE_GAME
 
         for event in events:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                result = 'PAUSE_GAME'
+                result = GameSignal.PAUSE_GAME
         return result
 
     def update(self, events: list) -> str:
@@ -430,8 +414,9 @@ class GameState(State):
         if self._level_ended:
             self._timer += 1/60  # Dodajemy czas jednej klatki
             if self._timer >= self._wait_time:
-                self.save_high_score()
-                next_state = "END_LEVEL"
+                self._level_service.save_new_high_score(self._level,
+                                                        self._current_score)
+                next_state = GameSignal.END_LEVEL
         return next_state
 
     def draw(self, screen: pygame. Surface) -> None:

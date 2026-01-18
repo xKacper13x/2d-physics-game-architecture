@@ -1,6 +1,7 @@
 from .base_state import State
+from core.signals import GameSignal
+from services.base_service import BaseService
 import pygame
-import json
 
 
 class PauseState(State):
@@ -30,10 +31,10 @@ class PauseState(State):
                                   wznowiony po wyjściu z pauzy.
         """
         self._paused_state = paused_state
-        with open('objects_config_files/pause.json') as file_handle:
-            data = json.load(file_handle)
-            super().__init__(screen_size, data)
-            self._create_buttons()
+        service = BaseService()
+        data = service.load_data('pause.json')
+        super().__init__(screen_size, data)
+        self._create_buttons()
 
     def get_paused_state(self) -> State:
         """
@@ -73,20 +74,20 @@ class PauseState(State):
             str: Komenda sterująca (np. 'UNPAUSE_GAME', 'RESTART_LEVEL').
                  Zwraca 'STAY', jeśli nie podjęto żadnej akcji.
         """
-        next_state = "STAY"
+        next_state = GameSignal.STAY
         if self._play_button.is_clicked(events):
-            return "UNPAUSE_GAME"
+            return GameSignal.UNPAUSE_GAME
         if self._retry_button.is_clicked(events):
-            return 'RESTART_LEVEL'
+            return GameSignal.RESTART_LEVEL
         if self._settings_button.is_clicked(events):
             # Tu można dodać ekran ustawień aplikacji
             pass
         if self._quit_button.is_clicked(events):
-            return "GO_TO_MENU"
+            return GameSignal.GO_TO_MENU
 
         for event in events:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                next_state = "UNPAUSE_GAME"
+                next_state = GameSignal.UNPAUSE_GAME
 
         return next_state
 
