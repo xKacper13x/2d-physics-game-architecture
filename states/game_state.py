@@ -6,6 +6,8 @@ from entities.projectile import Projectile
 from entities.structure import Structure
 from services.level_service import LevelService
 from core.signals import GameSignal
+from core.trajectory_service import TrajectoryService
+from core.physics_data import PhysicsParams, WorldBounds
 import pygame
 import pymunk
 
@@ -62,6 +64,7 @@ class GameState(State):
         self._level = level
         self._space = pymunk.Space()
 
+        self._trajectory_service = TrajectoryService()
         self._level_service = LevelService('objects_config_files')
         data = self._level_service.load_data(f'level{level}.json')
         self._space.gravity = self._level_service.physics_config
@@ -248,34 +251,24 @@ class GameState(State):
         start_pos = pygame.Vector2(self._current_projectile.position())
         diff = sling_pos - start_pos
         power = self._slingshot.get_power()
-        impulse = diff * power
 
         mass = self._current_projectile.get_mass()
-        # Unika dzielenia przez0
-        mass = max(1, mass)
-        velocity = impulse / mass
-
-        # Symulacja trajektorii
         gravity = pygame.Vector2(self._space.gravity)
-        curr_pos = sling_pos
-        time_step = 0.12
-        i = 1
 
         x_middle = self._screen_size[0] / 2
         ground_y = self._ground.get_pos_y()
-        while curr_pos.y <= ground_y and curr_pos.x <= x_middle:
-            t = i * time_step + time_step
-            i += 1
 
-            # Wzór na pozycję: s = s0 + vt + 0.5at^2
-            curr_pos = start_pos + (velocity * t) + (0.5 * gravity * t * t)
+        physics_params = PhysicsParams(mass, gravity, power, diff)
+        world_bounds = WorldBounds(ground_y, x_middle)
+        points = self._trajectory_service.get_trajectory_points(start_pos,
+                                                                physics_params,
+                                                                world_bounds)
 
-            # Rysowanie kropki
-            radius = 5 - (i // 10)
+        for index, point in points:
+            radius = 5 - (index // 10)
             radius = max(radius, 2)
-
-            pygame.draw.circle(screen, (255, 255, 255), curr_pos, radius)
-            pygame.draw.circle(screen, (0, 0, 0), curr_pos, radius, 1)
+            pygame.draw.circle(screen, (255, 255, 255), point, radius)
+            pygame.draw.circle(screen, (0, 0, 0), point, radius, 1)
 
     def _draw_objects(self, screen: pygame.Surface):
         """
