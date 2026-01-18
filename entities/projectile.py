@@ -174,10 +174,12 @@ class Projectile(PhysicalObject):
         new_pos = pygame.Vector2(slingshot_pos) + vector
         self._body.position = tuple(new_pos)
 
+    @property
     def body(self) -> pymunk.Body:
         """Zwraca ciało fizyczne."""
         return self._body
 
+    @property
     def shape(self):
         """Zwraca hitbox obiektu."""
         return self._shape
