@@ -1,4 +1,5 @@
 from entities.objects_base import PhysicalObject
+from entities.projectile import Projectile
 import pymunk
 
 
@@ -18,7 +19,7 @@ class Enemy(PhysicalObject):
         _health (int): Zdrowie obiektu.
         _score (int): wynik nabity na obiekcie.
     """
-    def __init__(self, space, object_data):
+    def __init__(self, space: pymunk.Space, object_data: dict):
         """
         Inicjalizuje przeciwnika.
 
@@ -79,7 +80,7 @@ class Enemy(PhysicalObject):
             if hasattr(other_shape, 'game_object'):
                 who_hit_me = other_shape.game_object
 
-                if type(who_hit_me).__name__ == 'Projectile':
+                if isinstance(who_hit_me, Projectile):
                     self._health = 0
                     self._score += 1000
 

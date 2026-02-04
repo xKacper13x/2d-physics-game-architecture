@@ -19,7 +19,8 @@ class GameObject:
         _object_rect (pygame.Rect): Prostokąt otaczający obiekt.
         _pos (tuple | pygame.Vector2): Początkowa pozycja obiektu (x, y).
      """
-    def __init__(self, object_data: dict):
+    def __init__(self, object_data: dict,
+                 position: tuple | pygame.Vector2 = None):
         """
         Inicjalizuje obiekt na podstawie słownika danych.
 
@@ -57,12 +58,19 @@ class GameObject:
             self._image = self._load_image(self._img_path, self._size)
 
         self._object_rect = self._image.get_rect()
+        if position is not None:
+            self._pos = position
+        else:
+            self._pos = (object_data.get('pos_x', 0),
+                         object_data.get('pos_y', 0))
         self._object_rect.center = self._pos
 
+    @property
     def name(self) -> str:
         """Zwraca nazwę obiektu."""
         return self._name
 
+    @property
     def position(self) -> pygame.Vector2:
         """Zwraca sktualną pozycję środka obiektu"""
         return pygame.Vector2(self._object_rect.center)
@@ -108,7 +116,8 @@ class PhysicalObject(GameObject):
                              w poprzedniej klatce.
         _pos (tuple): Pozycja obiektu na ekranie.
     """
-    def __init__(self, space: pymunk.Space, object_data: dict):
+    def __init__(self, space: pymunk.Space, object_data: dict,
+                 position: tuple | pygame.Vector2 = None):
         """
         Inicjalizuje obiekt fizyczny.
 
@@ -121,23 +130,20 @@ class PhysicalObject(GameObject):
         self._mass = max(self._mass, 1)
         self._last_angle = 0.0
 
-        if 'pos_x' in object_data:
-            x_pos = object_data.get('pos_x', 0)
-            y_pos = object_data.get('pos_y', 0)
-            self._pos = (x_pos, y_pos)
+        super().__init__(object_data, position)
 
         self._health = object_data.get('health', 100)
         if self._health == 'inf':
             self._health = math.inf
 
-        super().__init__(object_data)
         self._score = 0
         self._max_x = self._pos[0] + 100
         self._original_image = self._image
 
         self._last_velocity = pygame.Vector2(0, 0)
 
-    def get_mass(self) -> int:
+    @property
+    def mass(self) -> int:
         """Zwraca masę obiektu."""
         return self._mass
 
@@ -181,6 +187,7 @@ class PhysicalObject(GameObject):
 
         return off_screen
 
+    @property
     def velocity(self) -> pymunk.Vec2d:
         """Zwraca wektor prędkości ciała fizycznego."""
         return self._body.velocity

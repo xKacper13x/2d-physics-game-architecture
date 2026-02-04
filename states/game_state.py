@@ -6,8 +6,9 @@ from entities.projectile import Projectile
 from entities.structure import Structure
 from services.level_service import LevelService
 from core.signals import GameSignal
-from core.trajectory_service import TrajectoryService
+from services.trajectory_service import TrajectoryService
 from core.physics_data import PhysicsParams, WorldBounds
+from core.input_handler import InputData
 import pygame
 import pymunk
 
@@ -78,7 +79,7 @@ class GameState(State):
         self._current_score = 0
         self._update_score_labels(self._current_score, self._high_score)
 
-        self._max_dis = int(self._slingshot.get_height() * 0.8)
+        self._max_dis = int(self._slingshot.height * 0.8)
         self._object_on_sling = self._current_projectile
         self._dragged_object = None
 
@@ -89,7 +90,8 @@ class GameState(State):
 
         self._ground = Ground(self._screen_size, 940, self._space)
 
-    def get_level(self) -> int:
+    @property
+    def level(self) -> int:
         """
         Zwraca numer aktualnego poziomu.
 
@@ -98,7 +100,8 @@ class GameState(State):
         """
         return self._level
 
-    def get_current_score(self) -> int:
+    @property
+    def current_score(self) -> int:
         """
         Zwraca aktualny wynik gracza.
 
@@ -107,7 +110,8 @@ class GameState(State):
         """
         return self._current_score
 
-    def get_high_score(self) -> int:
+    @property
+    def high_score(self) -> int:
         """
         Zwraca najlepszy wynik (rekord) dla tego poziomu.
 
@@ -116,7 +120,8 @@ class GameState(State):
         """
         return self._high_score
 
-    def get_scores(self) -> tuple:
+    @property
+    def scores(self) -> tuple:
         """
         Zwraca krotkę z wynikami (bieżący, rekord).
 
@@ -145,7 +150,7 @@ class GameState(State):
         data = data['objects']
 
         self._slingshot = Slingshot(data)
-        pos = self._slingshot.position()
+        pos = self._slingshot.position
         self._slingshot_pos = (pos[0], pos[1] - 95)
 
         self._projectiles_data = data['projectiles']
@@ -169,32 +174,25 @@ class GameState(State):
         projectile = Projectile(self._space, data, self._slingshot_pos)
         return projectile
 
-    def _handle_mouse_release(self, events: list) -> None:
-        """Sprawdza, czy gracz puścił mysz, aby wystrzelić pocisk."""
-        for event in events:
-            if event.type == pygame.MOUSEBUTTONUP:
-                if self._dragged_object is not None:
-                    self._perform_launch()
-                self._dragged_object = None
-
     def _perform_launch(self) -> None:
         """
         Oblicza wektor siły i wystrzeliwuje pocisk z procy.
         """
-        start_pos = self._current_projectile.position()
+        start_pos = self._current_projectile.position
         pull_vector = self._slingshot_pos - start_pos
 
         distance = pull_vector.length()
         MIN_DIS = 70
 
         if distance >= MIN_DIS:
-            power = self._slingshot.get_power()
+            power = self._slingshot.power
             self._current_projectile.launch((pull_vector.x*power,
                                              pull_vector.y*power))
         else:
             self._current_projectile.go_to_start_pos()
 
-    def _check_for_launch(self, events: list) -> None:
+    def _check_for_launch(self, lmb_released: bool, lmb_pressed: bool,
+                          mouse_pos: tuple) -> None:
         """
         Obsługuje logikę myszy (chwytanie, ciągnięcie, puszczanie procy).
 
@@ -202,14 +200,20 @@ class GameState(State):
             events (list): Lista zdarzeń Pygame.
         """
         # obsluga puszczenia myszy(strzal lub reset)
-        self._handle_mouse_release(events)
+        if lmb_released:
+            if self._dragged_object is not None:
+                self._perform_launch()
+                self._dragged_object = None
 
-        is_ammo_dragged = self._current_projectile.is_dragged()
+        is_ammo_dragged = self._current_projectile.is_dragged(lmb_pressed,
+                                                              mouse_pos)
         if is_ammo_dragged or self._dragged_object is not None:
             self._dragged_object = self._current_projectile
-            self._dragged_object.drag(self._slingshot_pos, self._max_dis)
+            self._dragged_object.drag(self._slingshot_pos,
+                                      mouse_pos,
+                                      self._max_dis)
         # Zabezpieczenie: jeśli nie trzymamy przycisku, puszczamy obiekt
-        elif not pygame.mouse.get_pressed()[0]:
+        elif lmb_pressed:
             self._dragged_object = None
 
     def _kill_object(self, obj_to_remove: PhysicalObject) -> None:
@@ -248,15 +252,15 @@ class GameState(State):
             return
 
         sling_pos = pygame.Vector2(self._slingshot_pos)
-        start_pos = pygame.Vector2(self._current_projectile.position())
+        start_pos = pygame.Vector2(self._current_projectile.position)
         diff = sling_pos - start_pos
-        power = self._slingshot.get_power()
+        power = self._slingshot.power
 
-        mass = self._current_projectile.get_mass()
+        mass = self._current_projectile.mass
         gravity = pygame.Vector2(self._space.gravity)
 
         x_middle = self._screen_size[0] / 2
-        ground_y = self._ground.get_pos_y()
+        ground_y = self._ground.pos_y
 
         physics_params = PhysicsParams(mass, gravity, power, diff)
         world_bounds = WorldBounds(ground_y, x_middle)
@@ -278,7 +282,7 @@ class GameState(State):
             screen (pygame.Surface): ekran docelowy
         """
         if self._object_on_sling is not None:
-            rubber_anchor = self._object_on_sling.get_rubber_anchor()
+            rubber_anchor = self._object_on_sling.rubber_anchor
             self._slingshot.draw_inner_rubber(screen,
                                               rubber_anchor)
             super()._draw_objects(screen)
@@ -303,26 +307,24 @@ class GameState(State):
         for obj in objects_to_kill:
             self._kill_object(obj)
 
-    def _update_slingshot_status(self) -> None:
+    def _update_slingshot_status(self, mouse_pos: tuple) -> None:
         """Sprawdza, czy pocisk znajduje się na procy."""
-        if self._current_projectile.is_on_sling(self._slingshot_pos,
-                                                self._max_dis):
+        if self._current_projectile.is_on_sling(self._max_dis):
             self._object_on_sling = self._current_projectile
         else:
             self._object_on_sling = None
 
-    def _update_projectile_status(self) -> None:
+    def _update_projectile_status(self, mouse_pos: tuple) -> None:
         """
         Zarządza cyklem życia pocisku po wystrzale.
         Wykrywa zatrzymanie lub wylot poza ekran i przygotowuje kolejny strzał.
         """
-        if self._current_projectile.is_on_sling(self._slingshot_pos,
-                                                self._max_dis):
+        if self._current_projectile.is_on_sling(self._max_dis):
             return
 
         if not self._projectile_stopped:
             velocity = pygame.Vector2(
-                            self._current_projectile.velocity()).length()
+                            self._current_projectile.velocity).length()
 
             is_stopped = velocity < 4
             is_off_screen = self._current_projectile.off_screen(
@@ -334,7 +336,8 @@ class GameState(State):
                 # Reset timera dla opoźnienia zakończenia poziomu
                 self._timer = 0
 
-    def _handle_input(self, events: list) -> str:
+    def _handle_input(self, lmb_clicked: bool, mouse_pos: tuple,
+                      key_esc_down: bool) -> str:
         """
         Sprawdza kliknięcie przycisku pauzy lub klawisza ESC.
 
@@ -345,15 +348,14 @@ class GameState(State):
             str: Komenda sterująca, informująca o następnym stanie.
         """
         result = GameSignal.STAY
-        if self._pause_button.is_clicked(events):
+        if self._pause_button.is_clicked(lmb_clicked, mouse_pos):
             result = GameSignal.PAUSE_GAME
 
-        for event in events:
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                result = GameSignal.PAUSE_GAME
+        if key_esc_down:
+            result = GameSignal.PAUSE_GAME
         return result
 
-    def update(self, events: list) -> str:
+    def update(self, input_data: InputData) -> str:
         """
         Główna metoda aktualizacji poziomu gry.
         - Krok fizyki
@@ -374,13 +376,15 @@ class GameState(State):
         self._space.step(1/60)
 
         if not self._level_ended:
-            self._check_for_launch(events)
+            self._check_for_launch(input_data.lmb_released,
+                                   input_data.lmb_pressed,
+                                   input_data.mouse_pos)
 
-        self._update_slingshot_status()
+        self._update_slingshot_status(input_data.mouse_pos)
 
         self._update_entities()
 
-        self._update_projectile_status()
+        self._update_projectile_status(input_data.mouse_pos)
         # Gdy wszystkie obiekty przeciwników zostały zniszczone
         # i odliczanie do zakończenia poziomu nie zostało jeszcze uruchomione,
         # rozpoczyna zakończenie poziomu
@@ -402,7 +406,9 @@ class GameState(State):
                     self._projectile_stopped = False
                     self._timer = 0
 
-        next_state = self._handle_input(events)
+        next_state = self._handle_input(input_data.lmb_clicked,
+                                        input_data.mouse_pos,
+                                        input_data.key_esc_down)
 
         if self._level_ended:
             self._timer += 1/60  # Dodajemy czas jednej klatki

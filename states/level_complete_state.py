@@ -1,5 +1,6 @@
 from .base_state import State
 from core.signals import GameSignal
+from core.input_handler import InputData
 from services.base_service import BaseService
 import pygame
 
@@ -34,10 +35,10 @@ class LevelCompleteState(State):
                                      z którego pobierane są wyniki
                                      i numer poziomu.
         """
-        scores = completed_level.get_scores()
+        scores = completed_level.scores
         self._current_score, self._high_score = scores
         self._completed_level = completed_level
-        self._level = self._completed_level.get_level()
+        self._level = self._completed_level.level
 
         path = 'level_summary.json'
         service = BaseService()
@@ -48,7 +49,12 @@ class LevelCompleteState(State):
         self._update_score_labels(self._current_score,
                                   self._high_score)
 
-    def get_completed_level_state(self) -> State:
+        self._overlay = pygame.Surface((self._screen_size.x / 2,
+                                        self._screen_size.y),
+                                       pygame.SRCALPHA)
+
+    @property
+    def completed_level_state(self) -> State:
         """
         Zwraca obiekt stanu ukończonego poziomu.
 
@@ -57,7 +63,8 @@ class LevelCompleteState(State):
         """
         return self._completed_level
 
-    def get_level(self) -> int:
+    @property
+    def level(self) -> int:
         """
         Zwraca numer ukończonego poziomu.
 
@@ -76,7 +83,8 @@ class LevelCompleteState(State):
         self._retry_button = self._buttons_dict['retry_button']
         self._quit_button = self._buttons_dict['quit_button']
 
-    def _handle_input(self, events: list) -> str:
+    def _handle_input(self, lmb_clicked: bool,
+                      mouse_pos: tuple) -> GameSignal:
         """
         Sprawdza interakcję gracza z przyciskami interfejsu.
 
@@ -87,18 +95,18 @@ class LevelCompleteState(State):
             str: Komenda sterująca zmianą stanu (lub 'STAY').
         """
         next_state = GameSignal.STAY
-        if self._play_button.is_clicked(events):
+        if self._play_button.is_clicked(lmb_clicked, mouse_pos):
             if self._current_score > 0:
                 next_state = GameSignal.NEXT_LEVEL
             else:
                 next_state = GameSignal.RESTART_LEVEL
-        elif self._retry_button.is_clicked(events):
+        elif self._retry_button.is_clicked(lmb_clicked, mouse_pos):
             next_state = GameSignal.RESTART_LEVEL
-        elif self._quit_button.is_clicked(events):
+        elif self._quit_button.is_clicked(lmb_clicked, mouse_pos):
             next_state = GameSignal.GO_TO_MENU
         return next_state
 
-    def update(self, events):
+    def update(self, input_data: InputData) -> GameSignal:
         """
         Główna metoda aktualizacji logiki podsumowania.
 
@@ -109,10 +117,11 @@ class LevelCompleteState(State):
             str: Komenda sterująca oznaczająca następny stan
                  lub pozostanie w aktualnym.
         """
-        next_state = self._handle_input(events)
+        next_state = self._handle_input(input_data.lmb_clicked,
+                                        input_data.mouse_pos)
         return next_state
 
-    def draw(self, screen):
+    def draw(self, screen: pygame.Surface) -> None:
         """
         Rysuje ekran podsumowania.
 
@@ -126,13 +135,10 @@ class LevelCompleteState(State):
         """
         self._completed_level.draw(screen)
 
-        overlay = pygame.Surface((self._screen_size.x / 2,
-                                  self._screen_size.y),
-                                 pygame.SRCALPHA)
-        overlay.fill((0, 0, 0, 215))
-        overlay_rect = overlay.get_rect()
+        self._overlay.fill((0, 0, 0, 215))
+        overlay_rect = self._overlay.get_rect()
         overlay_rect.center = (self._screen_size / 2)
-        screen.blit(overlay, overlay_rect)
+        screen.blit(self._overlay, overlay_rect)
 
         self._draw_objects(screen)
         self._draw_texts(screen)

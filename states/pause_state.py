@@ -1,5 +1,6 @@
 from .base_state import State
 from core.signals import GameSignal
+from core.input_handler import InputData
 from services.base_service import BaseService
 import pygame
 
@@ -36,7 +37,8 @@ class PauseState(State):
         super().__init__(screen_size, data)
         self._create_buttons()
 
-    def get_paused_state(self) -> State:
+    @property
+    def paused_state(self) -> State:
         """
         Zwraca stan gry, który został zapauzowany.
 
@@ -45,16 +47,17 @@ class PauseState(State):
         """
         return self._paused_state
 
-    def get_level(self) -> int:
+    @property
+    def level(self) -> int:
         """
         Zwraca numer poziomu z zapauzowanej gry.
 
         Returns:
             int: Numer poziomu.
         """
-        return self._paused_state.get_level()
+        return self._paused_state.level
 
-    def _create_buttons(self):
+    def _create_buttons(self) -> None:
         """
         Przypisuje przyciski do zmiennych.
         """
@@ -63,7 +66,7 @@ class PauseState(State):
         self._settings_button = self._buttons_dict['settings_button']
         self._quit_button = self._buttons_dict['quit_button']
 
-    def update(self, events: list) -> str:
+    def update(self, input_data: InputData) -> GameSignal:
         """
         Obsługuje interakcję z menu pauzy (przyciski i klawisze).
 
@@ -75,23 +78,26 @@ class PauseState(State):
                  Zwraca 'STAY', jeśli nie podjęto żadnej akcji.
         """
         next_state = GameSignal.STAY
-        if self._play_button.is_clicked(events):
+        if self._play_button.is_clicked(input_data.lmb_clicked,
+                                        input_data.mouse_pos):
             return GameSignal.UNPAUSE_GAME
-        if self._retry_button.is_clicked(events):
+        if self._retry_button.is_clicked(input_data.lmb_clicked,
+                                         input_data.mouse_pos):
             return GameSignal.RESTART_LEVEL
-        if self._settings_button.is_clicked(events):
+        if self._settings_button.is_clicked(input_data.lmb_clicked,
+                                            input_data.mouse_pos):
             # Tu można dodać ekran ustawień aplikacji
             pass
-        if self._quit_button.is_clicked(events):
+        if self._quit_button.is_clicked(input_data.lmb_clicked,
+                                        input_data.mouse_pos):
             return GameSignal.GO_TO_MENU
 
-        for event in events:
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                next_state = GameSignal.UNPAUSE_GAME
+        if input_data.key_esc_down:
+            next_state = GameSignal.UNPAUSE_GAME
 
         return next_state
 
-    def draw(self, screen):
+    def draw(self, screen: pygame.Surface) -> None:
         """
         Rysuje menu pauzy na ekranie.
 

@@ -43,11 +43,13 @@ class Slingshot(GameObject):
         self._right_fork_offset = pygame.math.Vector2(self._width / 4.15,
                                                       self._height / -2.6)
 
-    def get_power(self) -> int:
+    @property
+    def power(self) -> int:
         """Zwraca mnożnik siły procy."""
         return self._power
 
-    def get_height(self) -> int:
+    @property
+    def height(self) -> int:
         """Zwraca wysokość grafiki procy (używane do limitowania naciągu)."""
         return self._height
 
@@ -117,7 +119,8 @@ class Ground:
         self._end_point = (self._width, self._y_pos)
         self._create_physics(space)
 
-    def get_pos_y(self) -> int:
+    @property
+    def pos_y(self) -> int:
         """Zwraca poziom Y podłogi."""
         return self._y_pos
 

@@ -4,6 +4,7 @@ from states.game_state import GameState
 from states.pause_state import PauseState
 from states.level_complete_state import LevelCompleteState
 from core.signals import GameSignal
+from core.input_handler import InputHandler
 import pygame
 import sys
 import ctypes
@@ -52,6 +53,8 @@ class AngryKnightsApp:
         self._screen_size = self.screen_size()
         self._clock = pygame.time.Clock()
         self._running = True
+
+        self._input_handler = InputHandler()
 
         self._state = MainMenuState(self._screen_size)
 
@@ -109,15 +112,15 @@ class AngryKnightsApp:
         elif result is GameSignal.UNPAUSE_GAME:
             # wymaga y get_paused_state w stanie PauseState
             # Wraca do wstrzymanego momentu rozgrywki
-            state = self._state.get_paused_state()
+            state = self._state.paused_state
 
         elif result is GameSignal.END_LEVEL:
             # Zakończenie poziomu i wyświetlenie jego podsumowania (wyniki)
             state = LevelCompleteState(self._screen_size, self._state)
 
         elif result is GameSignal.NEXT_LEVEL:
-            # wymaga metody get_completed_level() w klasie LevelCompleteState
-            current_level = self._state.get_level()
+            # wymaga metody level w klasie LevelCompleteState
+            current_level = self._state.level
             try:
                 # Próbujemy uruchomić następny poziom gry
                 next_level_index = current_level + 1
@@ -130,7 +133,7 @@ class AngryKnightsApp:
 
         elif result is GameSignal.RESTART_LEVEL:
             # Uruchamia ponownie właśnie zakończony poziom gry
-            current_level = self._state.get_level()
+            current_level = self._state.level
             state = GameState(self._screen_size, current_level)
 
         else:
@@ -154,7 +157,12 @@ class AngryKnightsApp:
 
             # 1. Przekaż obsługę logiki do aktualnego stanu
             # Stan zwraca samego siebie lub NOWY stan
-            result = self._state.update(events)
+            input_data = self._input_handler.process_data(events)
+
+            if input_data.key_F11_down:
+                self._change_screen_mode()
+
+            result = self._state.update(input_data)
             self._state = self._manage_states(result)
 
             # 2. Rysowanie
@@ -163,9 +171,7 @@ class AngryKnightsApp:
             for event in events:
                 if event.type == pygame.QUIT:
                     self._running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_F11:
-                        self._change_screen_mode()
+
             pygame.display.flip()
             delta_time = self._clock.tick(60) / 1000
             delta_time = max(0.001, min(0.1, delta_time))

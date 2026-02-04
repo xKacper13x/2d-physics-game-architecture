@@ -1,5 +1,7 @@
 import helpers
 import entities.ui_elements as ui_elements
+from core.input_handler import InputData
+from core.signals import GameSignal
 import exceptions
 import pygame
 
@@ -83,7 +85,7 @@ class State:
                 button = ui_elements.Button(obj, self._screen_size)
 
             created_buttons.append(button)
-            self._buttons_dict[button.name()] = button
+            self._buttons_dict[button.name] = button
         return created_buttons
 
     def _create_texts(self, data: dict) -> None:
@@ -98,7 +100,7 @@ class State:
             object_data = data['texts']
             for obj in object_data:
                 text = ui_elements.Text(obj, self._screen_size)
-                self._texts_dict[text.name()] = text
+                self._texts_dict[text.name] = text
 
     def _update_score_labels(self, curr_score: int, high_score: int) -> None:
         """
@@ -111,13 +113,13 @@ class State:
         """
         score_obj = self._texts_dict.get('score_text')
         if score_obj:
-            base_txt = score_obj.get_initial_text()
+            base_txt = score_obj.initial_text
             new_text = base_txt + f' {curr_score:^5}'
             score_obj.set_text(new_text)
 
         high_score_obj = self._texts_dict.get('high_score_text')
         if high_score_obj:
-            base_txt = high_score_obj.get_initial_text()
+            base_txt = high_score_obj.initial_text
             new_text = base_txt + f' {high_score:^5}'
             high_score_obj.set_text(new_text)
 
@@ -161,8 +163,8 @@ class State:
         for text in self._texts_dict.values():
             text.draw(screen)
 
-    def update(self, events: list) -> str:
-        return 'STAY'
+    def update(self, input_data: InputData) -> GameSignal:
+        return GameSignal.STAY
 
     def draw(self, screen: pygame.Surface) -> None:
         """

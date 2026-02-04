@@ -1,5 +1,6 @@
 from .base_state import State
 from services.base_service import BaseService
+from core.input_handler import InputData
 from core.signals import GameSignal
 import pygame
 
@@ -48,7 +49,7 @@ class MainMenuState(State):
         self._options_button = self._buttons_dict['options_menu_button']
         self._quit_button = self._buttons_dict['quit_menu_button']
 
-    def update(self, events: list) -> str:
+    def update(self, input_data: InputData) -> GameSignal:
         """
         Wykrywa naciśnięcia przycisków, oraz zwraca adekwatne do nich
         komendy sterujące w postaci stringa.
@@ -60,15 +61,17 @@ class MainMenuState(State):
             str: Komenda sterująca (np 'START_GAME', 'STAY')
         """
         next_state = GameSignal.STAY
-
-        if self._play_button.is_clicked(events):
+        if self._play_button.is_clicked(input_data.lmb_clicked,
+                                        input_data.mouse_pos):
             next_state = GameSignal.START_GAME
 
-        elif self._options_button.is_clicked(events):
+        elif self._options_button.is_clicked(input_data.lmb_clicked,
+                                             input_data.mouse_pos):
             new_event = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_F11)
             pygame.event.post(new_event)
 
-        elif self._quit_button.is_clicked(events):
+        elif self._quit_button.is_clicked(input_data.lmb_clicked,
+                                          input_data.mouse_pos):
             quit_event = pygame.event.Event(pygame.QUIT)
             pygame.event.post(quit_event)
 

@@ -23,7 +23,7 @@ class Projectile(PhysicalObject):
         _shape (pymunk.Poly): Hitbox obiektu.
     """
     def __init__(self, space: pymunk.Space,
-                 object_data: dict, position: tuple):
+                 object_data: dict, slingshot_pos: tuple):
         """
         Inicjalizuje pocisk.
 
@@ -35,10 +35,11 @@ class Projectile(PhysicalObject):
         """
         self._mass = object_data['mass']
 
-        self._pos = position
-        super().__init__(space, object_data)
+        self._pos = slingshot_pos
+        super().__init__(space, object_data, self._pos)
         self._score = object_data['score']
         self._pull_vector = pygame.Vector2(0, 0)
+        self._start_vec = pygame.math.Vector2(self._pos)
 
         self._create_physics(space)
 
@@ -54,7 +55,8 @@ class Projectile(PhysicalObject):
             space (pymunk.Space): Przestrzeń fizyczna.
         """
         # oblicza moment bezwladności
-        self._moment = 999990
+        HIGH_MOMENT_INERTIA = 999990
+        self._moment = HIGH_MOMENT_INERTIA
         self._body = pymunk.Body(self._mass, self._moment, pymunk.Body.STATIC)
         self._body.position = self._pos
         self._shape = pymunk.Circle(self._body, self._radius)
@@ -81,7 +83,7 @@ class Projectile(PhysicalObject):
 
         self._body.apply_impulse_at_local_point(impulse_vector)
         start_vec = pygame.math.Vector2(self._pos)
-        current_vec = pygame.math.Vector2(self.position())
+        current_vec = pygame.math.Vector2(self.position)
 
         self._pull_vector = current_vec - start_vec
 
@@ -89,7 +91,8 @@ class Projectile(PhysicalObject):
         """Resetuje pozycję pocisku do środka procy (anulowanie strzału)."""
         self._body.position = self._pos
 
-    def is_dragged(self) -> bool:
+    def is_dragged(self, lmb_pressed: bool,
+                   mouse_pos: tuple) -> bool:
         """
         Sprawdza, czy gracz chwycił pocisk myszką.
 
@@ -97,14 +100,13 @@ class Projectile(PhysicalObject):
             bool: True, jeśli LPM jest wciśnięty, kursor jest na pocisku,
                   a pocisk jest w stanie statycznym (na procy).
         """
-        if pygame.mouse.get_pressed()[0]:
-            mouse_pos = pygame.mouse.get_pos()
+        if lmb_pressed:
             m_collision = self._object_rect.collidepoint(mouse_pos)
             if m_collision and self._body.body_type == pymunk.Body.STATIC:
                 return True
         return False
 
-    def is_on_sling(self, slingshot_pos: tuple, max_distance: int) -> bool:
+    def is_on_sling(self, max_distance: int) -> bool:
         """
         Sprawdza, czy pocisk nadal fizycznie znajduje się na gumie procy.
 
@@ -123,7 +125,7 @@ class Projectile(PhysicalObject):
             return True
 
         slingshot_center = pygame.math.Vector2(self._pos)
-        current_pos = pygame.math.Vector2(self.position())
+        current_pos = pygame.math.Vector2(self.position)
         current_vector = current_pos - slingshot_center
 
         # 3. ILOCZYN SKALARNY (Dot Product)
@@ -133,13 +135,13 @@ class Projectile(PhysicalObject):
         # Jeśli wynik < 0:
         # Pocisk minął środek procy i leci w świat (Guma znika).
         dot_product = current_vector.dot(self._pull_vector)
-        vector = self._get_mouse_vector(slingshot_pos)
-        if dot_product > 0 and vector.length() <= max_distance:
+        if dot_product > 0 and current_vector.length() <= max_distance:
             return True
         else:
             return False
 
-    def _get_mouse_vector(self, slingshot_pos: tuple) -> pygame.Vector2:
+    def _get_mouse_vector(self, slingshot_pos: tuple,
+                          mouse_pos: tuple) -> pygame.Vector2:
         """
         Oblicza wektor od procy do kursora myszy.
 
@@ -149,15 +151,16 @@ class Projectile(PhysicalObject):
         Returns:
             pygame.Vector2: Wektor wskazujący na mysz.
         """
-        mouse_x = pygame.mouse.get_pos()[0]
-        mouse_y = pygame.mouse.get_pos()[1]
+        mouse_x = mouse_pos[0]
+        mouse_y = mouse_pos[1]
         sling_x = slingshot_pos[0]
         sling_y = slingshot_pos[1]
 
         vector = pygame.Vector2(mouse_x - sling_x, mouse_y - sling_y)
         return vector
 
-    def drag(self, slingshot_pos: tuple, max_distance: int) -> None:
+    def drag(self, slingshot_pos: tuple, mouse_pos: tuple,
+             max_distance: int) -> None:
         """
         Aktualizuje pozycję pocisku podczas przeciągania myszką.
 
@@ -167,7 +170,7 @@ class Projectile(PhysicalObject):
             slingshot_pos (tuple): Środek procy.
             max_distance (int): Maksymalny zasięg naciągu.
         """
-        vector = self._get_mouse_vector(slingshot_pos)
+        vector = self._get_mouse_vector(slingshot_pos, mouse_pos)
         if vector.length() > max_distance:
             vector.scale_to_length(max_distance)
 
@@ -184,7 +187,8 @@ class Projectile(PhysicalObject):
         """Zwraca hitbox obiektu."""
         return self._shape
 
-    def get_rubber_anchor(self) -> tuple:
+    @property
+    def rubber_anchor(self) -> tuple:
         """
         Oblicza punkt na krawędzi pocisku, do którego ma być przyczepiona guma.
         Znajdujący się po przeciwnej stronie pocisku względem procy.
@@ -192,8 +196,8 @@ class Projectile(PhysicalObject):
         Returns:
             tuple: Współrzędne (x, y) punktu zaczepienia.
         """
-        projectile_center = pygame.math.Vector2(self.position())
-        slingshot_center = pygame.math.Vector2(self._pos)
+        projectile_center = pygame.math.Vector2(self.position)
+        slingshot_center = self._start_vec
 
         direction = slingshot_center - projectile_center
 

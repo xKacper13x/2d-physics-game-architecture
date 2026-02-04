@@ -58,23 +58,28 @@ class Text:
         self._y_offset = data.get('y_offset', 0)
         self._update_render()
 
+    @property
     def name(self) -> str:
         """Zwraca nazwę elementu."""
         return self._name
 
-    def get_text(self) -> str:
+    @property
+    def text(self) -> str:
         """Zwraca aktualną treść tekstu."""
         return self._text
 
-    def get_text_color(self) -> tuple:
+    @property
+    def text_color(self) -> tuple:
         """Zwraca kolor tekstu."""
         return tuple(self._text_color)
 
-    def get_initial_text(self) -> str:
+    @property
+    def initial_text(self) -> str:
         """Zwraca tekst początkowy (szablon)."""
         return self._initial_text
 
-    def get_font_size(self) -> int:
+    @property
+    def font_size(self) -> int:
         """Zwraca rozmiar czcionki."""
         return self._font_size
 
@@ -149,7 +154,7 @@ class Text:
                                                  self._font_size)
             self._update_render()
 
-    def draw(self, screen):
+    def draw(self, screen: pygame.Surface) -> None:
         """Rysuje tekst na ekranie."""
         if self._text_surface is not None:
             screen.blit(self._text_surface, self._text_rect)
@@ -186,17 +191,20 @@ class Button(GameObject):
         self._pos = pygame.Vector2(helpers.base_pos_on_anchor(anchor,
                                                               screen_size))
         self._pos += pygame.Vector2(off_x, off_y)
-        super().__init__(object_data)
+        super().__init__(object_data, self._pos)
 
+    @property
     def size(self) -> tuple:
         """Zwraca rozmiar przycisku (szer, wys)."""
         return self._object_rect.size
 
+    @property
     def rect(self) -> pygame.Rect:
         """Zwraca prostokąt kolizji przycisku."""
         return self._object_rect
 
-    def is_clicked(self, events: list) -> bool:
+    def is_clicked(self, lmb_clicked: bool,
+                   mouse_pos: tuple) -> bool:
         """
         Sprawdza, czy przycisk został kliknięty w bieżącej klatce.
 
@@ -206,12 +214,10 @@ class Button(GameObject):
         Returns:
             bool: True, jeśli nastąpiło kliknięcie LPM na przycisku.
         """
-        for event in events:
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    m_collision = self._object_rect.collidepoint(event.pos)
-                    if m_collision:
-                        return True
+        if lmb_clicked:
+            m_collision = self._object_rect.collidepoint(mouse_pos)
+            if m_collision:
+                return True
         return False
 
 

@@ -2,7 +2,7 @@
     "background_img": "assets/images/Level_bg.png",
     "gravity_x": 0,
     "gravity_y": 900,
-    "high_score": 0,
+    "high_score": 9100,
     "texts": [
         {
             "name": "score_text",
