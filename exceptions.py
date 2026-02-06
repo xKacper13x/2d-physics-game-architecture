@@ -1,24 +1,30 @@
 class GameError(Exception):
-    """Bazowa klasa dla wyjątków w moim projekcie gry."""
+    """
+    The root exception class for the Angry Knights engine.
+
+    Acts as a base for all project-specific errors, allowing for
+    centralized error handling and logging across the application.
+    """
     pass
 
 
-# Konkretne wyjątki dziedziczące po bazowym.
-
 class StateError(GameError):
-    """Ogólny błąd związany ze stanami gry."""
+    """Exception generally connected to states."""
     pass
 
 
 class MissingResourceError(GameError):
-    """Rzucany, gdy nie można znaleźć pliku (obrazka, czcionki)."""
+    """
+    Raised when a critical external asset (image, font, or JSON config)
+    is unreachable at the provided path.
+    """
     def __init__(self, path):
         self.path = path
-        message = f"Nie udało się załadować zasobu ze ścieżki: {self.path}"
+        message = f"Couldn't load from path: {self.path}"
         super().__init__(message)
 
 
 class InvalidConfigurationError(GameError):
-    """Rzucany, gdy parametry gry (np. rozmiar czcionki) są nieprawidłowe."""
+    """Raised, when game parameters are incorrect (for example font size)"""
     def __init__(self, message):
         super().__init__(message)

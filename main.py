@@ -12,31 +12,31 @@ import ctypes
 
 class AngryKnightsApp:
     """
-    Główna klasa aplikacji zarządzająca cyklem życia gry 'Angry Knights'.
+    The primary entry point and lifecycle manager
+    for the 'Angry Knights' application.
 
-    Klasa ta odpowiada za:
-    - Inicjalizację biblioteki Pygame i okna gry.
-    - Obsługę głównej pętli (game loop).
-    - Przechwytywanie globalnych zdarzeń (np. zamknięcie okna,
-                                        przełączenie pełnego ekranu).
-    - Zarządzanie maszyną stanów (przełączanie między Menu, Grą, Pauzą itp)
+    This class serves as the application's core controller, responsible for:
+    - Initializing the Pygame framework and rendering context.
+    - Orchestrating the main execution loop (Game Loop).
+    - Managing global events (e.g., display toggles, application shutdown).
+    - Implementing the State Machine pattern to handle transitions between
+      Menu, Gameplay, and UI states.
 
     Attributes:
-        _screen (pygame.Surface): Główna powierzchnia rysowania (okno gry).
-         _is_fullscreen (bool): Flaga określająca,
-                                        czy gra jest w trybie pełnoekranowym.
-        _screen_size (pygame.Vector2): Wymiary okna gry.
-        _clock (pygame.time.Clock): Zegar kontrolujący liczbę klatek na
-                                                                sekundę (FPS).
-        _running (bool): Flaga sterująca główną pętlą gry.
-        _state (State): Aktualnie aktywny stan gry (np. Menu, Rozgrywka).
+        _screen (pygame.Surface): The primary display surface for rendering.
+        _is_fullscreen (bool): A flag indicating the current display mode.
+        _screen_size (pygame.Vector2): 2d Vector containing screen's
+                                       width and height.
+        _clock (pygame.time.Clock): A high-resolution timer
+                                    for frame rate control (FPS).
+        _running (bool): Control flag for the main execution loop.
+        _state (State): The currently active state object (e.g., MainMenu).
     """
     def __init__(self):
         """
-        Inicjalizuje aplikację, ustawia okno, jego rozmiar, ikonę oraz
-        Stan początkowy(Menu)
-        W przypadku braku pliku ikony, błąd jest ignorowany,
-        aby nie przerywać gry
+        Initializes app, sets window with its size, icon and firts state.
+        With lack of icon file, occuring error is ignored in order to keep
+        the app running.
         """
         pygame.init()
 
@@ -61,10 +61,10 @@ class AngryKnightsApp:
     @property
     def screen_size(self) -> pygame.Vector2:
         """
-        Zwraca ustawiony rozmiar okna
+        Returns current screen size
 
         Returns:
-            pygame.Vector2: Wektor zawierający szerokość i wysokość okna
+            pygame.Vector2: Vector containing screens width and height.
         """
         screen_x = self._screen.get_width()
         screen_y = self._screen.get_height()
@@ -72,9 +72,10 @@ class AngryKnightsApp:
 
     def _change_screen_mode(self) -> None:
         """
-        Przełącza tryb wyświetlania między oknem a pełnym ekranem (Fullscreen).
+        Toggles the display mode between windowed and fullscreen.
 
-        Zachowuje rozdzielczość logiczną 1920x1080 dzięki fladze pygame.SCALED.
+        Leverages the pygame.SCALED flag to ensure a consistent 1920x1080
+        logical aspect ratio regardless of physical screen resolution.
         """
         if self._is_fullscreen:
             self._screen = pygame.display.set_mode((1920, 1080), pygame.SCALED)
@@ -87,70 +88,57 @@ class AngryKnightsApp:
 
     def _manage_states(self, result: GameSignal) -> State:
         """
-        Centrala zarządzająca maszyną stanów.
-        Interpretuje otrzymane wyniki w postaci stringa.
+        The centralized orchestration hub for the State Machine.
+
+        Interprets signals emitted by the current state and instantiates the
+        appropriate new state to drive the application forward.
 
         Args:
-            result (str): Komenda sterująca stanami.
+            result (GameSignal): A signal enum representing the
+                                 desired state transition.
 
         Returns:
-            State: Nowy obiekt stanu, który ma zostać aktywowany w następnej
-                   klatce, lub obecny stan, jeśli nie nastąpiła żadna zmiana.
+            State: The new state object for the next frame, or the existing
+                   state if no transition is required.
         """
-        # Obsluga Komend sterujących
         if result is GameSignal.GO_TO_MENU:
             state = MainMenuState(self._screen_size)
 
         elif result is GameSignal.START_GAME:
-            # Rozpoczęcie nowej gry od poziomu 1
             state = GameState(self._screen_size, 1)
 
         elif result is GameSignal.PAUSE_GAME:
-            # Zapauzowanie gry, przekazuje obecny stan do stanu pauzy,
-            # żeby móc do niego wrócić
             state = PauseState(self._screen_size, self._state)
 
         elif result is GameSignal.UNPAUSE_GAME:
-            # wymaga y get_paused_state w stanie PauseState
-            # Wraca do wstrzymanego momentu rozgrywki
             state = self._state.paused_state
 
         elif result is GameSignal.END_LEVEL:
-            # Zakończenie poziomu i wyświetlenie jego podsumowania (wyniki)
             state = LevelCompleteState(self._screen_size, self._state)
 
         elif result is GameSignal.NEXT_LEVEL:
-            # wymaga metody level w klasie LevelCompleteState
             current_level = self._state.level
             try:
-                # Próbujemy uruchomić następny poziom gry
                 next_level_index = current_level + 1
                 state = GameState(self._screen_size, next_level_index)
-                # Oznacza, że nie ukończyliśmy ostatni poziom
             except FileNotFoundError:
-                # Wykryty wyjątek oznacza, że ukończony właśnie poziom był
-                # ostatnim w grze, przechodzimy do menu głównego
                 state = MainMenuState(self._screen_size)
 
         elif result is GameSignal.RESTART_LEVEL:
-            # Uruchamia ponownie właśnie zakończony poziom gry
             current_level = self._state.level
             state = GameState(self._screen_size, current_level)
 
         else:
-            # Jeśli brak zmian - zostajemy w tym samym stanie
             state = self._state
         return state
 
     def run(self) -> None:
         """
-        Główna pętla programu. Aktualizuje i rysuje stany.
-        Otrzymane z update() stanów komendy sterujące przekazuje do
-        metody _manage_states(), po czym ustawia nowy Stan gry.
+        Executes the main application loop (The "Heartbeat").
 
-        Wykrywa:
-        - Zamknięcie programu: Przerywa pętlę.
-        - Wciśniecie klawisza F11: Zmienia tryb wyświetlania aplikacji.
+        Continuously processes inputs, updates the active state logic, and
+        renders frames while managing delta time for consistent
+        physics simulation.
         """
         delta_time = 0.1
         while self._running:
