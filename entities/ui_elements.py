@@ -1,6 +1,6 @@
 from .static_objects import GameObject
 import pygame
-import helpers
+import core.helpers as helpers
 
 
 class Text:
@@ -39,15 +39,10 @@ class Text:
         self._initial_text = text
         self._text = text
 
-        text_color_R = data.get('text_color_R', 0)
-        text_color_G = data.get('text_color_G', 0)
-        text_color_B = data.get('text_color_B', 0)
-        self._text_color = (text_color_R, text_color_G, text_color_B)
-
         self._font_path = data.get('font_path', '')
         self._font_size = data.get('font_size', 10)
 
-        self._font_size = int(self._font_size)
+        self._font_size = int(max(self._font_size, 1))
 
         self._font = helpers.initialize_font(self._font_path,
                                              self._font_size)
@@ -56,7 +51,12 @@ class Text:
 
         self._x_offset = data.get('x_offset', 0)
         self._y_offset = data.get('y_offset', 0)
-        self._update_render()
+
+        text_color_R = data.get('text_color_R', 0)
+        text_color_G = data.get('text_color_G', 0)
+        text_color_B = data.get('text_color_B', 0)
+
+        self.set_text_color((text_color_R, text_color_G, text_color_B))
 
     @property
     def name(self) -> str:
@@ -124,7 +124,7 @@ class Text:
         if new_text == '':
             return
 
-        self._text = new_text
+        self._text = str(new_text)
         self._update_render()
 
     def set_text_color(self, new_color: tuple):
@@ -135,18 +135,22 @@ class Text:
         Args:
             new_color (tuple): Krotka (R, G, B).
         """
-        try:
-            r = min(255, max(0, new_color[0]))
-            g = min(255, max(0, new_color[1]))
-            b = min(255, max(0, new_color[2]))
+        r, g, b = new_color
 
-            self._text_color = (r, g, b)
-        except ValueError:
-            self._text_color = (0, 0, 0)
+        r = helpers.validate_color(r)
+        g = helpers.validate_color(g)
+        b = helpers.validate_color(b)
+        self._text_color = (r, g, b)
+
         self._update_render()
 
-    def set_font_size(self, new_size: int) -> None:
-        """Zmienia rozmiar czcionki."""
+    def set_font_size(self, new_size: int | float) -> None:
+        """
+        Changes font size.
+
+        Args:
+            new_size (int | float): New value for size.
+        """
         if isinstance(new_size, (int, float)):
             self._font_size = max(1, new_size)
 

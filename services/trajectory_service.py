@@ -47,7 +47,7 @@ class TrajectoryService:
             t = i * time_step + time_step
             i += 1
 
-            # Wzór na pozycję: s = s0 + vt + 0.5at^2
+            # s = s0 + vt + 0.5at^2
             curr_pos = start_pos + (velocity * t) + (0.5 * gravity * t * t)
             points.append((i, curr_pos))
         return points

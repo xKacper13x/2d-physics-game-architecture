@@ -1,5 +1,5 @@
 import pygame
-import helpers
+import core.helpers as helpers
 import math
 import pymunk
 import exceptions
@@ -192,7 +192,8 @@ class PhysicalObject(GameObject):
         """Zwraca wektor prędkości ciała fizycznego."""
         return self._body.velocity
 
-    def update(self, objects_to_kill: list | None = None) -> list | None:
+    def update(self, screen_size: tuple,
+               objects_to_kill: list | None = None) -> list | None:
         """
         Aktualizuje stan obiektu w każdej klatce.
 
@@ -211,7 +212,7 @@ class PhysicalObject(GameObject):
         pos_y = int(self._body.position.y)
         self._object_rect.center = (pos_x, pos_y)
         if objects_to_kill is None:
-            return None
+            return []
         if self in objects_to_kill:
             return objects_to_kill
 
@@ -227,7 +228,7 @@ class PhysicalObject(GameObject):
             damage_to_deal = impact_force * 0.3
             self._take_damage(damage_to_deal)
 
-        if self._body.position.x > self._max_x:
+        if self.off_screen(screen_size):
             self._health = 0
             self._score += 700
 

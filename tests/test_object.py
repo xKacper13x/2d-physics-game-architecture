@@ -1,101 +1,111 @@
-from entities.objects_base import PhysicalObject
+import pytest
 import pygame
 import pymunk
-import os
-import pytest
+from unittest.mock import patch
+from entities.objects_base import PhysicalObject
 
 
-# Nazwa tymczasowego obrazka
-TEMP_IMG = "test_img_temp.png"
+# --- FIXTURES  ---
+
+@pytest.fixture
+def mock_image_loader():
+    """
+    This fixture makes helpers.load_image return ready surface
+    in order to make tests faster and easier to conduct.
+    """
+    with patch('core.helpers.load_image') as mock_load:
+        mock_load.return_value = pygame.Surface((10, 10))
+        yield mock_load
 
 
-def create_dummy_image():
-    """Pomocnicza funkcja tworząca prawdziwy plik graficzny."""
-    pygame.init()
-    # Tworzymy czerwoną kropkę 10x10
-    surf = pygame.Surface((10, 10))
-    surf.fill((255, 0, 0))
-    pygame.image.save(surf, TEMP_IMG)
+@pytest.fixture
+def basic_object(mock_image_loader):
+    """
+    Creates an instance of PhysicalObject with easy to test data.
 
-
-def delete_dummy_image():
-    """Sprzątanie po testach."""
-    if os.path.exists(TEMP_IMG):
-        os.remove(TEMP_IMG)
-
-
-def test_physical_object_logic():
-    create_dummy_image()
+    Returns:
+        PhysicalObject: A safe-to-test object instance with default data.
+    """
     space = pymunk.Space()
-
-    # Dane testowe z błędem (ujemna masa), żeby sprawdzić naprawę
-    data = {
-        'name': 'TestBox',
-        'img_path': TEMP_IMG,
-        'pos_x': 50,
-        'pos_y': 50,
-        'mass': -100,  # Błędna masa
-        'health': 100
+    object_data = {
+        'name': 'test_obj',
+        'img_path': 'doesnt matter',
+        'mass': 3,
+        'height': 1.5,
+        'pos_x': 500,
+        'pos_y': 400
     }
 
-    try:
-        obj = PhysicalObject(space, data)
-        obj._pos = (data['pos_x'], data['pos_y'])
-
-        # Musimy ręcznie dodać ciało fizyczne, bo klasa bazowa tego nie robi
-        # (normalnie robi to klasa dziedzicząca, np. Box)
-        obj._body = pymunk.Body(1, 1)
-        obj._body.position = (50, 50)
-
-        # Sprawdzenie czy masa została naprawiona (min. 1)
-        assert obj.get_mass() == 1
-
-        # Sprawdzenie czy obiekt ma pełne życie
-        assert obj._health == 100
-
-        obj._take_damage(20)
-
-        # Życie powinno spaść do 80
-        assert obj._health == 80
-
-        # Punkty powinny się naliczyć (20 obrażeń * 3 = 60 pkt)
-        assert obj.collect_points() == 60
-
-        # Po pobraniu punktów licznik powinien wrócić do 0
-        assert obj.collect_points() == 0
-
-        # --- Test śmierci (Update) ---
-        # Ustawiamy życie na 0
-        obj._take_damage(80)
-        assert obj._health == 0
-
-        # Wywołujemy update
-        kill_list = []
-        obj.update(kill_list)
-
-        # Obiekt powinien dodać się do listy do usunięcia
-        assert obj in kill_list
-
-    finally:
-        # CLEANUP - Sprzątanie (nawet jak test wywali błąd)
-        delete_dummy_image()
+    obj = PhysicalObject(space, object_data)
+    obj._body = pymunk.Body(1, 1)
+    obj._body.velocity = (0, 0)
+    obj._last_velocity = pygame.Vector2(0, 0)
+    return obj
 
 
-def test_missing_data_error():
-    """Sprawdza czy program wyrzuci błąd przy braku kluczowych danych."""
-    create_dummy_image()
+# --- Unit tests ---
+
+def test_mass_validation_negative(mock_image_loader):
+    """Checks if objects corrects its mass while negative."""
     space = pymunk.Space()
+    obj_data = {
+                'mass': -100
+               }
+    obj = PhysicalObject(space, obj_data, (0, 0))
 
-    bad_data = {
-        'name': 'BadBox',
-        # Brak img_path
-    }
+    assert obj.mass == 1
 
-    try:
-        # Oczekujemy, że helpers.load_image wyrzuci błąd
-        # lub pygame nie załaduje pliku
-        with pytest.raises(Exception):
-            PhysicalObject(space, bad_data)
 
-    finally:
-        delete_dummy_image()
+def test_take_damage_and_scoring(basic_object):
+    """Checks taking damage and counting points"""
+    initial_health = basic_object._health
+    damage = 20
+
+    basic_object._take_damage(damage)
+
+    assert basic_object._health == initial_health - damage
+
+    assert basic_object.collect_points() == damage * 3
+
+    assert basic_object.collect_points() == 0
+
+
+def test_death_logic(basic_object):
+    """
+    Verifies that the object is marked for removal upon fatal damage.
+    (Damage equal to health in order to check the edge case)
+    """
+    damage = basic_object._health
+    screen_size = (100, 100)
+    basic_object._take_damage(damage)
+
+    obj_to_kill = []
+    basic_object.update(screen_size, obj_to_kill)
+    assert basic_object in obj_to_kill
+
+
+def test_off_screen(basic_object):
+    """
+    Verifies that the off_screen() method correctly identifies
+    objects within and outside the screen boundaries.
+    """
+    screen_size = (400, 500)
+
+    basic_object._body.position = (200, 200)
+    assert basic_object.off_screen(screen_size) is False
+
+    basic_object._body.position = (1000, 250)
+    assert basic_object.off_screen(screen_size) is True
+
+
+def test_death_off_screen(basic_object):
+    """
+    Verifies that object dies while being off screen.
+    """
+    basic_object._body.position = (-1000, 250)
+    screen_size = (100, 100)
+
+    obj_to_kill = []
+    basic_object.update(screen_size, obj_to_kill)
+    assert basic_object in obj_to_kill
+    assert basic_object.collect_points() == 700

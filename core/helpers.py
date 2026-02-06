@@ -5,13 +5,14 @@ import pygame
 
 def check_path(path: str | None) -> None:
     """
-    Sprawdza, czy podana ścieżka do pliku istnieje.
+    Checks if the provided file path exists.
 
     Args:
-        path (str): Ścieżka do pliku lub katalogu.
+        path (str | None): Path to the file or directory.
 
     Raises:
-        exceptions.MissingResourceError: Jeśli ścieżka nie istnieje.
+        exceptions.MissingResourceError: If the path is None
+                                         or does not exist on disk.
     """
     if path is None:
         raise exceptions.MissingResourceError(path)
@@ -21,16 +22,15 @@ def check_path(path: str | None) -> None:
 
 def check_size(size: int | float | tuple | pygame.Vector2 = 0) -> None:
     """
-    Weryfikuje, czy podany rozmiar jest poprawny (większy od zera).
+    Verifies if the provided size is valid (greater than zero).
 
     Args:
-        size (int | float | tuple | pygame.Vector2): Rozmiar do sprawdzenia.
-                                                     Może być liczbą
-                                                     lub parą liczb.
+        size (int | float | tuple | pygame.Vector2): Size to validate.
+            Can be a scalar or a pair of dimensions.
 
     Raises:
-        exceptions.InvalidConfigurationError: Jeśli rozmiar jest <= 0
-                                              lub typ jest nieobsługiwany.
+        exceptions.InvalidConfigurationError: If size is <= 0
+                                        or the type is unsupported.
     """
     if size is None:
         msg = "No size provided."
@@ -49,31 +49,45 @@ def check_size(size: int | float | tuple | pygame.Vector2 = 0) -> None:
         raise exceptions.InvalidConfigurationError(msg)
 
 
-# None oznacza, że zostawiamy oryginalny rozmiar
+def validate_color(color_value: int) -> int:
+    """
+    Clamps an integer color component value between 0 and 255.
+
+    Args:
+        color_value (int): The color component value to validate.
+
+    Returns:
+        int: Validated value within the [0, 255] range.
+    """
+    if not isinstance(color_value, int):
+        color_value = 0
+    return max(0, min(255, color_value))
+
+
 def load_image(img_path: str, img_size:
                (int | float | tuple | pygame.Vector2) = None
                ) -> pygame.Surface:
     """
-    Bezpiecznie ładuje obrazek z dysku i opcjonalnie go skaluje.
+    Safely loads an image from disk and optionally scales it.
 
-    W przypadku błędu (brak pliku, uszkodzony plik) zwraca różowy kwadrat
-    (placeholder), aby gra mogła kontynuować działanie.
+    In case of an error (e.g., missing file, corrupt data), returns a
+    pink placeholder surface to ensure the application continues running.
 
     Args:
-        img_path (str): Ścieżka do pliku graficznego.
+        img_path (str): Path to the image file.
         img_size (int | float | tuple | pygame.Vector2 | None, optional):
-            Docelowy rozmiar.
-            - Jeśli int/float: Skaluje proporcjonalnie wg wysokości.
-            - Jeśli tuple/Vector2: Skaluje do konkretnych wymiarów (szer, wys).
-            - Jeśli None: Zostawia oryginalny rozmiar.
+            Target dimensions for scaling.
+            - int/float: Proportional scaling based on height.
+            - tuple/Vector2: Scaling to specific (width, height) dimensions.
+            - None: Keeps the original image size.
 
     Returns:
-        pygame.Surface: Załadowany i przeskalowany obraz lub placeholder.
+        pygame.Surface: The loaded and scaled image,
+                        or a placeholder on failure.
     """
     try:
         check_path(img_path)
 
-        # Ładowanie obrazka
         if pygame.display.get_surface() is None:
             image = pygame.image.load(img_path)
         else:
@@ -82,7 +96,6 @@ def load_image(img_path: str, img_size:
     except (exceptions.MissingResourceError, pygame.error, FileNotFoundError):
         return create_placeholder(img_size)
 
-    # LOGIKA SKALOWANIA - Wykonujemy tylko jeśli podano rozmiar
     if img_size is not None:
         try:
             check_size(img_size)
@@ -90,7 +103,6 @@ def load_image(img_path: str, img_size:
             final_width = 0
             final_height = 0
 
-            # Skalowanie proporcjonalne (podana tylko wysokość jako int/float)
             if isinstance(img_size, (int, float)):
                 height = image.get_height()
                 if height != 0:
@@ -100,7 +112,6 @@ def load_image(img_path: str, img_size:
                 else:
                     final_width, final_height = int(img_size), int(img_size)
 
-            # Skalowanie do konkretnych wymiarów (tuple/Vector2)
             else:
                 final_width = int(img_size[0])
                 final_height = int(img_size[1])
@@ -108,8 +119,7 @@ def load_image(img_path: str, img_size:
             image = pygame.transform.scale(image, (final_width, final_height))
 
         except (ValueError, TypeError, exceptions.InvalidConfigurationError):
-            # W razie błędnego rozmiaru, zwracamy oryginał (lub placeholder)
-            # Tutaj decydujemy się po prostu pominąć skalowanie
+            # Fallback: skip scaling if the provided size is invalid
             pass
 
     return image
@@ -119,14 +129,14 @@ def create_placeholder(
           size: int | float | tuple | pygame.Vector2 | None
           ) -> pygame.Surface:
     """
-    Tworzy 'Missing Texture' (jaskrawy różowy kwadrat) o zadanym rozmiarze.
+    Creates a 'Missing Texture' placeholder (bright magenta square).
 
     Args:
         size (int | float | tuple | pygame.Vector2 | None, optional):
-            Oczekiwany rozmiar placeholdera.
+            The desired size of the placeholder. Defaults to 50x50.
 
     Returns:
-        pygame.Surface: Różowa powierzchnia (Magenta).
+        pygame.Surface: A magenta surface representing a missing resource.
     """
     default_size = 50
     w, h = default_size, default_size
@@ -138,7 +148,6 @@ def create_placeholder(
                 if val > 0:
                     w, h = val, val
 
-            # 2. Jeśli podano krotkę/wektor (szer, wys)
             elif isinstance(size, (tuple, list, pygame.Vector2)):
                 if len(size) >= 2:
                     safe_w = int(size[0])
@@ -147,11 +156,8 @@ def create_placeholder(
                         w, h = safe_w, safe_h
 
     except (ValueError, TypeError, AttributeError):
-        # Jeśli cokolwiek pójdzie nie tak przy odczycie rozmiaru,
-        # ignorujemy to i zostajemy przy 50x50.
         pass
 
-    # Pilnuje żeby nie stworzyć powierzchni 0x0
     w = max(1, w)
     h = max(1, h)
 
@@ -163,18 +169,17 @@ def create_placeholder(
 def initialize_font(font_path: str | None,
                     font_size: int | float) -> pygame.font.Font:
     """
-    Inicjalizuje czcionkę Pygame.
+    Initializes a Pygame font object.
 
-    Jeśli podana ścieżka jest nieprawidłowa,
-    ładuje domyślną czcionkę systemową.
+    If the provided path is invalid or missing, it falls back to the
+    default system font.
 
     Args:
-        font_path (str | None): Ścieżka do pliku .ttf/.otf lub
-                                None dla domyślnej.
-        font_size (int | float): Rozmiar czcionki.
+        font_path (str | None): Path to the .ttf/.otf file or None for default.
+        font_size (int | float): Desired font size.
 
     Returns:
-        pygame.font.Font: Obiekt czcionki gotowy do renderowania tekstu.
+        pygame.font.Font: A font object ready for text rendering.
     """
     try:
         check_size(font_size)
@@ -194,19 +199,18 @@ def initialize_font(font_path: str | None,
 
 def base_pos_on_anchor(anchor: str, size: pygame.Vector2 | tuple) -> tuple:
     """
-    Oblicza współrzędne punktu zakotwiczenia (anchor) dla
-    danego rozmiaru ekranu/obiektu. W przypadku podania
-    niepoprawnego anchor, ustawia środek ekranu/obiektu.
+    Calculates anchor point coordinates based on a container size.
+
+    Used for UI positioning. If an invalid anchor name is provided,
+    the function defaults to the center of the container.
 
     Args:
-        anchor (str): Nazwa zakotwiczenia ('center', 'topleft', 'topright',
-                      'bottomleft', 'bottomright').
-        size (pygame.Vector2 | tuple): Wymiary kontenera (np. ekranu).
-                                       Domyślnie fallbackuje do (1920, 1080)
-                                       w razie błędu.
+        anchor (str): Anchor name ('topleft', 'topright', 'bottomleft',
+                      'bottomright', or 'center').
+        size (pygame.Vector2 | tuple): Dimensions of the container.
 
     Returns:
-        tuple: Współrzędne (x, y) punktu zakotwiczenia.
+        tuple: (x, y) coordinates of the anchor point.
     """
     base_x, base_y = 0, 0
 
@@ -226,7 +230,6 @@ def base_pos_on_anchor(anchor: str, size: pygame.Vector2 | tuple) -> tuple:
     elif anchor == 'bottomright':
         base_x, base_y = size_w, size_h
     else:
-        # domyślnie ustawiamy center
         base_x, base_y = size_w / 2, size_h / 2
 
     return (base_x, base_y)

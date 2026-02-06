@@ -297,24 +297,25 @@ class GameState(State):
         objects_to_kill = []
         for obj in self._objects:
             if isinstance(obj, (Enemy, Structure)):
-                objects_to_kill = obj.update(objects_to_kill)
+                objects_to_kill = obj.update(self._screen_size,
+                                             objects_to_kill)
                 self._current_score += obj.collect_points()
                 self._update_score_labels(self._current_score,
                                           self._high_score)
             else:
-                obj.update()
+                obj.update(self._screen_size)
 
         for obj in objects_to_kill:
             self._kill_object(obj)
 
-    def _update_slingshot_status(self, mouse_pos: tuple) -> None:
+    def _update_slingshot_status(self) -> None:
         """Sprawdza, czy pocisk znajduje się na procy."""
         if self._current_projectile.is_on_sling(self._max_dis):
             self._object_on_sling = self._current_projectile
         else:
             self._object_on_sling = None
 
-    def _update_projectile_status(self, mouse_pos: tuple) -> None:
+    def _update_projectile_status(self) -> None:
         """
         Zarządza cyklem życia pocisku po wystrzale.
         Wykrywa zatrzymanie lub wylot poza ekran i przygotowuje kolejny strzał.
@@ -380,11 +381,11 @@ class GameState(State):
                                    input_data.lmb_pressed,
                                    input_data.mouse_pos)
 
-        self._update_slingshot_status(input_data.mouse_pos)
+        self._update_slingshot_status()
 
         self._update_entities()
 
-        self._update_projectile_status(input_data.mouse_pos)
+        self._update_projectile_status()
         # Gdy wszystkie obiekty przeciwników zostały zniszczone
         # i odliczanie do zakończenia poziomu nie zostało jeszcze uruchomione,
         # rozpoczyna zakończenie poziomu

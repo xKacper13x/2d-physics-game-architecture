@@ -50,7 +50,7 @@ class AngryKnightsApp:
         self._screen = pygame.display.set_mode((1920, 1080), pygame.SCALED)
         self._is_fullscreen = False
         pygame.display.set_caption("Angry Knights")
-        self._screen_size = self.screen_size()
+        self._screen_size = self.screen_size
         self._clock = pygame.time.Clock()
         self._running = True
 
@@ -58,6 +58,7 @@ class AngryKnightsApp:
 
         self._state = MainMenuState(self._screen_size)
 
+    @property
     def screen_size(self) -> pygame.Vector2:
         """
         Zwraca ustawiony rozmiar okna
@@ -84,7 +85,7 @@ class AngryKnightsApp:
                                                    pygame.SCALED)
             self._is_fullscreen = True
 
-    def _manage_states(self, result: str) -> State:
+    def _manage_states(self, result: GameSignal) -> State:
         """
         Centrala zarządzająca maszyną stanów.
         Interpretuje otrzymane wyniki w postaci stringa.

@@ -1,4 +1,4 @@
-import helpers
+import core.helpers as helpers
 import entities.ui_elements as ui_elements
 from core.input_handler import InputData
 from core.signals import GameSignal

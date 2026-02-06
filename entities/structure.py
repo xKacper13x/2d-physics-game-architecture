@@ -48,7 +48,8 @@ class Structure(PhysicalObject):
 
         space.add(self._body, self._shape)
 
-    def update(self, objects_to_kill: list | None = None) -> list | None:
+    def update(self, screen_size: tuple,
+               objects_to_kill: list | None = None) -> list | None:
         """
         Aktualizuje stan struktury.
 
@@ -62,7 +63,7 @@ class Structure(PhysicalObject):
         """
         if objects_to_kill is None:
             return []
-        return super().update(objects_to_kill)
+        return super().update(screen_size, objects_to_kill)
 
     def draw(self, screen):
         super().draw(screen)
