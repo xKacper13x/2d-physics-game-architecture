@@ -5,29 +5,30 @@ import pygame
 
 class Slingshot(GameObject):
     """
-    Klasa reprezentująca procę (wyrzutnię).
+    Represents the slingshot launcher mechanism.
 
-    Odpowiada za:
-    - Wyświetlanie grafiki procy.
-    - Rysowanie gumy (cięciwy).
-    - Przechowywanie informacji o sile naciągu.
+    This class handles the visual representation of the launcher, including:
+    - Rendering the main slingshot sprite.
+    - Orchestrating the "Z-order" drawing of rubber bands to encapsulate
+      the projectile visually.
+    - Managing launch power multipliers used for impulse calculations.
 
     Attributes:
-        _power (int): Mnożnik siły wyrzutu.
-        _rubber_color (tuple): Kolor gumy (R, G, B).
-        _rubber_width (int): Grubość rysowanej linii gumy.
-        _left_fork_offset (pygame.Vector2): Przesunięcie lewych widełek
-                                            względem środka procy.
-        _right_fork_offset (pygame.Vector2): Przesunięcie prawych widełek
-                                             względem środka procy.
+        _power (int): Force multiplier for projectile launching.
+        _rubber_color (tuple): RGB color of the slingshot bands.
+        _rubber_width (int): Line thickness for band rendering.
+        _left_fork_offset (pygame.Vector2): Calibration offset
+                                            for the left fork tip.
+        _right_fork_offset (pygame.Vector2): Calibration offset for
+                                             the right fork tip.
     """
     def __init__(self, data: dict):
         """
-        Inicjalizuje procę.
+        Initializes the slingshot mechanism using configuration data.
 
         Args:
-            data (dict): Główny słownik konfiguracyjny poziomu.
-                         Musi zawierać klucz 'slingshot' z parametrami procy.
+            data (dict): Configuration dictionary
+                         containing 'slingshot' parameters.
         """
         object_data = data['slingshot']
         self._pos = (object_data['pos_x'], object_data['pos_y'])
@@ -45,25 +46,28 @@ class Slingshot(GameObject):
 
     @property
     def power(self) -> int:
-        """Zwraca mnożnik siły procy."""
+        """Return slingshot's force multiplyer."""
         return self._power
 
     @property
     def height(self) -> int:
-        """Zwraca wysokość grafiki procy (używane do limitowania naciągu)."""
+        """
+        Returns the sprite height, used to clamp the maximum pull distance.
+        """
         return self._height
 
     def draw_outer_rubber(self, screen: pygame.Surface,
                           projectile_pos: tuple | None = None) -> None:
         """
-        Rysuje tylną część gumy (tę, która powinna być ZA pociskiem).
+        Renders the rear section of the rubber band.
 
-        Jeśli proca jest w spoczynku (projectile_pos is None),
-        rysuje prostą linię między widełkami.
+        If the slingshot is at rest, it draws
+        a straight line between both forks.
 
         Args:
-            screen (pygame.Surface): Ekran docelowy.
-            projectile_pos (tuple | None): Pozycja naciągniętego pocisku.
+            screen (pygame.Surface): The target rendering surface.
+            projectile_pos (tuple | None): The current position of the
+                                           projectile's anchor point.
         """
         left_fork = self._pos + self._left_fork_offset
         if projectile_pos is None:
@@ -77,11 +81,12 @@ class Slingshot(GameObject):
     def draw_inner_rubber(self, screen: pygame.Surface,
                           projectile_pos: tuple) -> None:
         """
-        Rysuje przednią część gumy (tę, która powinna być PRZED pociskiem).
+        Renders the front section of the rubber band.
 
         Args:
-            screen (pygame.Surface): Ekran docelowy.
-            projectile_pos (tuple): Pozycja naciągniętego pocisku.
+            screen (pygame.Surface): The target rendering surface.
+            projectile_pos (tuple): The current position of the projectile's
+                                    anchor point.
         """
         right_fork = self._pos + self._right_fork_offset
         pygame.draw.line(screen, self._rubber_color, right_fork,
@@ -90,27 +95,28 @@ class Slingshot(GameObject):
 
 class Ground:
     """
-    Klasa reprezentująca fizyczne podłoże (ziemię).
+    Represents the static physical environment boundary (the floor).
 
-    Jest to obiekt niewidoczny, ale posiadający
-    fizyczne właściwości (kolizje), które zapobiegają spadaniu obiektów
-    w nieskończoność.
+    This entity is invisible but provides critical physics constraints,
+    preventing objects from falling indefinitely and managing environmental
+    friction/elasticity.
 
     Attributes:
-        _y_pos (int): Pozycja Y poziomu ziemi.
-        _body (pymunk.Body): Statyczne ciało fizyczne.
-        _shape (pymunk.Segment): Kształt (linia) reprezentujący ziemię.
+        _y_pos (int): The vertical coordinate of the ground level.
+        _body (pymunk.Body): Static physics body associated with the ground.
+        _shape (pymunk.Segment): Collision segment defining
+                                 the ground boundary.
     """
     def __init__(self, screen_size: pygame.Vector2, y_pos: int,
                  space: pymunk.Space):
         """
-        Inicjalizuje fizykę ziemi.
+        Initializes the physical ground segment.
 
         Args:
-            screen_size (pygame.Vector2): Rozmiar okna (do obliczenia
-                                                        szerokości ziemi).
-            y_pos (int): Współrzędna Y, na której znajduje się podłoga.
-            space (pymunk.Space): Przestrzeń symulacji.
+            screen_size (pygame.Vector2): Display dimensions to
+                                          calculate width.
+            y_pos (int): The vertical (Y) position of the ground.
+            space (pymunk.Space): The Pymunk physics space.
         """
         self._width = 3 * screen_size[0]
         self._y_pos = y_pos
@@ -121,26 +127,26 @@ class Ground:
 
     @property
     def pos_y(self) -> int:
-        """Zwraca poziom Y podłogi."""
+        """Returns the Y-coordinate of the floor level."""
         return self._y_pos
 
     def _create_physics(self, space: pymunk.Space) -> None:
         """
-        Tworzy statyczny segment (linię) w Pymunk.
+        Configures a static collision segment within the physics engine.
 
-        Segment posiada wysokie tarcie (żeby obiekty się nie ślizgały)
-        i niską sprężystość (żeby się nie odbijały jak od trampoliny).
+        The segment is assigned a high friction coefficient to prevent sliding
+        and low elasticity to simulate realistic ground impact.
         """
         self._body = space.static_body
 
         self._shape = pymunk.Segment(self._body, self._start_point,
                                      self._end_point, 5)
 
-        # Właściwości fizyczne
-        # Maksymalne tarcie (żeby elementy się nie ślizgały jak na lodzie)
+        # Physics Properties:
+        # High friction ensures objects don't slide indefinitely
         self._shape.friction = 1.0
 
-        # Mała sprężystość (żeby nie odbijały się jak od trampoliny)
+        # Low elasticity prevents "trampoline" effects on impact
         self._shape.elasticity = 0.2
 
         space.add(self._shape)

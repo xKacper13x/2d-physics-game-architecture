@@ -7,31 +7,29 @@ import exceptions
 
 class GameObject:
     """
-    Podstawowa klasa dla wszystkich obiektów wizualnych w grze.
+    Base class for all visual objects in the game.
 
-    Odpowiada za wczytanie grafiki, skalowanie oraz rysowanie obiektu
-    na ekranie.
+    Handles loading images, scaling, and basic positioning on the screen.
 
     Attributes:
-        _name (str): Nazwa obiektu (np. do identyfikacji w debugowaniu).
-         _img_path (str): Ścieżka do pliku graficznego.
-        _image (pygame.Surface): Powierzchnia z załadowaną grafiką.
-        _object_rect (pygame.Rect): Prostokąt otaczający obiekt.
-        _pos (tuple | pygame.Vector2): Początkowa pozycja obiektu (x, y).
-     """
+        _name (str): Identifier used for debugging and logging.
+        _img_path (str): File path to the image resource.
+        _image (pygame.Surface): The actual image used for rendering.
+        _object_rect (pygame.Rect): Rectangle for positioning and boundaries.
+        _pos (pygame.Vector2): Current center position (x, y).
+    """
     def __init__(self, object_data: dict,
                  position: tuple | pygame.Vector2 = None):
         """
-        Inicjalizuje obiekt na podstawie słownika danych.
+        Initializes the object using a configuration dictionary.
 
         Args:
-            object_data (dict): Słownik zawierający klucze:
-                - 'name': Nazwa obiektu.
-                - 'img_path': Ścieżka do grafiki.
-                - 'pos_x', 'pos_y': Współrzędne początkowe.
-                - 'height' (opcjonalnie): Wysokość do skalowania.
-                - 'width' (opcjonalnie): Szerokość do skalowania.
-                - 'radius' (opcjonalnie): Promień (jeśli obiekt jest kołem).
+            object_data (dict): Dictionary containing:
+                - 'name': Object identifier.
+                - 'img_path': Path to graphic file.
+                - 'pos_x', 'pos_y': Initial coordinates.
+                - 'height' / 'width' (optional): Dimensions for scaling.
+                - 'radius' (optional): Used if the object is circular.
         """
         self._name = object_data.get('name', '')
         self._img_path = object_data.get('img_path', '')
@@ -67,26 +65,26 @@ class GameObject:
 
     @property
     def name(self) -> str:
-        """Zwraca nazwę obiektu."""
+        """Returns object's name"""
         return self._name
 
     @property
     def position(self) -> pygame.Vector2:
-        """Zwraca sktualną pozycję środka obiektu"""
+        """Returns current position of object's center"""
         return pygame.Vector2(self._object_rect.center)
 
     def _load_image(self, img_path: str,
                     img_size: int | float | tuple |
                     pygame.Vector2 | None = None) -> None:
-        """Helper do bezpiecznego ładowania obrazów."""
+        """Helper for safe image loading via helpers module."""
         return helpers.load_image(img_path, img_size)
 
     def draw(self, screen: pygame.Surface) -> None:
         """
-        Rysuje obiekt na ekranie w jego aktualnej pozycji.
+        Draws objects on the provided Surface.
 
         Args:
-            screen (pygame.Surface): Ekran docelowy.
+            screen (pygame.Surface): Target screen to draw on.
         """
         screen.blit(self._image, self._object_rect)
 
@@ -97,33 +95,33 @@ class GameObject:
 
 class PhysicalObject(GameObject):
     """
-    Klasa rozszerzająca GameObject o właściwości fizyczne (Pymunk).
+    Extends GameObjects with physics properties using Pymunk.
 
-    Obsługuje:
-    - Masę, zdrowie i zadawanie obrażeń przy zderzeniach.
-    - Synchronizację pozycji graficznej z ciałem fizycznym (Pymunk Body).
-    - Rotację grafiki zgodnie z fizyką.
-    - Zliczanie punktów za uszkodzenia.
+    Manages:
+    - Mass, health, and collision damage detection.
+    - Synchronizing visual position with the physics body.
+    - Rotating graphics based on physics body angle.
+    - Scoring system for damaging or destroying the object.
 
     Attributes:
-        _space (pymunk.Space): Przestrzeń fizyczna, do której należy obiekt.
-        _mass (float): Masa obiektu.
-        _health (float): Punkty życia (może być nieskończone 'inf').
-        _score (int): Punkty zgromadzone za niszczenie tego obiektu.
-        _body (pymunk.Body): Ciało fizyczne
-        (musi być przypisane w klasie dziedziczącej).
-        _last_angle (float): Kąt o jaki obiekt był obrócony
-                             w poprzedniej klatce.
-        _pos (tuple): Pozycja obiektu na ekranie.
+        _space (pymunk.Space): A physical space, to which object belongs.
+        _mass (float): Object's mass.
+        _health (float): Health points.
+        _score (int): Points for destroing this objects.
+        _body (pymunk.Body): Physical body.
+        (Must be assigned in the inheriting class).
+        _last_angle (float): The angle by which the object was rotated
+                             in the previous frame.
+        _pos (tuple): Object's position on the screen.
     """
     def __init__(self, space: pymunk.Space, object_data: dict,
                  position: tuple | pygame.Vector2 = None):
         """
-        Inicjalizuje obiekt fizyczny.
+        Initializes the physical object and its properties
 
         Args:
-            space (pymunk.Space): Przestrzeń symulacji.
-            object_data (dict): Konfiguracja (masa, zdrowie, grafika).
+            space (pymunk.Space): The Pymunk physics space.
+            object_data (dict): Configuration (mass, health, image data).
         """
         self._space = space
         self._mass = object_data.get('mass', 1)
@@ -144,16 +142,16 @@ class PhysicalObject(GameObject):
 
     @property
     def mass(self) -> int:
-        """Zwraca masę obiektu."""
+        """Return the object's mass."""
         return self._mass
 
     def collect_points(self) -> int:
         """
-        Zwraca punkty zgromadzone przez obiekt (za obrażenia/zniszczenie)
-        i resetuje licznik punktów.
+        Return points collected by the object(for damaging/ destroing it)
+        and resets points counter
 
         Returns:
-            int: Liczba punktów do dodania do wyniku gracza.
+            int: Total points to add to the player's score.
         """
         points = self._score
         self._score = 0
@@ -161,10 +159,10 @@ class PhysicalObject(GameObject):
 
     def _take_damage(self, damage: int) -> None:
         """
-        Zadaje obrażenia obiektowi i nalicza punkty.
+        Reduces health and adds points based on damage taken.
 
         Args:
-            damage (float): Wartość obrażeń (siła uderzenia).
+            damage (float): The amount of damage (impact force).
         """
         new_health = self._health - abs(damage)
         self._score += int(abs(damage) * 3)
@@ -172,13 +170,14 @@ class PhysicalObject(GameObject):
 
     def off_screen(self, screen_size: pygame.Vector2) -> bool:
         """
-        Sprawdza, czy obiekt wyleciał daleko poza okno
+        Checks if objects is out of the boundaries
 
         Args:
-            screen_size (pygame.Vector2 | tuple): Wymiary ekranu.
+            screen_size (pygame.Vector2 | tuple): Dimensions of
+                                                  the game window.
 
         Returns:
-            bool: True, jeśli obiekt jest daleko poza widokiem.
+            bool: True if the object is far outside the visible area.
         """
         max_x = screen_size[0]
         off_screen = False
@@ -189,24 +188,24 @@ class PhysicalObject(GameObject):
 
     @property
     def velocity(self) -> pymunk.Vec2d:
-        """Zwraca wektor prędkości ciała fizycznego."""
+        """Returns the current velocity vector from Pymunk"""
         return self._body.velocity
 
     def update(self, screen_size: tuple,
                objects_to_kill: list | None = None) -> list | None:
         """
-        Aktualizuje stan obiektu w każdej klatce.
+        Updates the object's state for current frame.
 
-        1. Synchronizuje pozycję grafiki z fizyką.
-        2. Oblicza siłę uderzenia (zmiana prędkości).
-        3. Zadaje obrażenia przy silnych kolizjach.
-        4. Oznacza obiekt do usunięcia, jeśli zdrowie spadnie do 0.
+        - Syncs sprite position with physics body.
+        - Calculates impact force based on velocity changes.
+        - Deals damage for collisions above a certain threshold.
+        - Adds to 'objects_to_kill' if health reaches zero.
 
         Args:
-            objects_to_kill (list | None): Lista obiektów do usunięcia.
+            objects_to_kill (list | None): List of objects marked for removal.
 
         Returns:
-            list | None: Zaktualizowana lista obiektów do usunięcia.
+            list | None: Updated list of objects to destroy.
         """
         pos_x = int(self._body.position.x)
         pos_y = int(self._body.position.y)
@@ -238,20 +237,21 @@ class PhysicalObject(GameObject):
 
     def draw(self, screen: pygame.Surface) -> None:
         """
-        Rysuje obiekt z uwzględnieniem rotacji fizycznej.
+        Draws objects on the provided Surface.
 
         Args:
-            screen (pygame.Surface): Ekran docelowy.
+            screen (pygame.Surface): Target screen to draw on.
         """
         angle = self._body.angle
         angle = -1 * math.degrees(angle)
 
-        # W celu optymalizacji gry, wykonuje transform,
-        # tylko jeżeli obiekt się obrócił.
+        # Rotation optimization: Updates the sprite only when
+        #   the angular change is significant.
         if abs(angle - self._last_angle) > 1.0:
             self._image = pygame.transform.rotate(self._original_image, angle)
             self._last_angle = angle
 
+        # Re-center rect after rotation to prevent sprite drifting
         pos = self._body.position
         self._object_rect = self._image.get_rect(center=(pos.x, pos.y))
 

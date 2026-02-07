@@ -5,32 +5,30 @@ import core.helpers as helpers
 
 class Text:
     """
-    Klasa reprezentująca element tekstowy w grze.
+    A standalone UI component for text rendering and management.
 
-    Odpowiada za renderowanie tekstu, obsługę czcionek, kolorów
-    oraz pozycjonowanie względem ekranu lub innego obiektu (np. przycisku).
+    Responsible for managing font lifecycles, color validation, and
+    dynamic positioning relative to a parent surface or coordinate system.
 
     Attributes:
-        _surface (pygame.Vector2 | pygame.Rect): Powierzchnia lub rozmiar
-                                                 odniesienia do pozycjonowania.
-        _name (str): Nazwa elementu (ID).
-        _text (str): Aktualnie wyświetlany tekst.
-        _initial_text (str): Tekst początkowy.
-        _text_color (tuple): Kolor tekstu (R, G, B).
-        _font (pygame.font.Font): Obiekt czcionki.
-        _text_surface (pygame.Surface): Wyrenderowany obraz tekstu.
-        _text_rect (pygame.Rect): Prostokąt otaczający tekst.
+        _surface (pygame.Vector2 | pygame.Rect): The reference container
+                                                 for positioning.
+        _name (str): Unique identifier for the text element.
+        _text (str): The currently displayed string.
+        _text_color (tuple): Validated RGB color tuple.
+        _font (pygame.font.Font): The Pygame font object used for rendering.
+        _text_surface (pygame.Surface): The rendered text image.
+        _text_rect (pygame.Rect): The bounding box for the rendered text.
     """
     def __init__(self, data: dict,
                  surface: pygame.Vector2 | pygame.Rect):
         """
-        Inicjalizuje obiekt tekstowy.
+        Initializes the text component with configuration data.
 
         Args:
-            data (dict): Słownik konfiguracyjny.
-            surface (pygame.Vector2 | pygame.Rect): Wymiary ekranu (Vector2)
-                                    lub prostokąt rodzica (Rect),
-                                    względem którego tekst ma być wyśrodkowany.
+            data (dict): Configuration dictionary (text, font_size, etc.).
+            surface (pygame.Vector2 | pygame.Rect): The parent bounds used
+                                                    for anchor calculations.
         """
         self._surface = surface
         self._name = data.get('name', '')
@@ -60,34 +58,34 @@ class Text:
 
     @property
     def name(self) -> str:
-        """Zwraca nazwę elementu."""
+        """Returns the unique identifier of the text element."""
         return self._name
 
     @property
     def text(self) -> str:
-        """Zwraca aktualną treść tekstu."""
+        """Returns the current text content."""
         return self._text
 
     @property
     def text_color(self) -> tuple:
-        """Zwraca kolor tekstu."""
+        """Returns the current RGB color tuple of the text."""
         return tuple(self._text_color)
 
     @property
     def initial_text(self) -> str:
-        """Zwraca tekst początkowy (szablon)."""
+        """Returns the initial template/starting text."""
         return self._initial_text
 
     @property
     def font_size(self) -> int:
-        """Zwraca rozmiar czcionki."""
+        """Returns the current font size (integer)."""
         return self._font_size
 
     def _update_render(self) -> None:
         """
-        Renderuje powierzchnię tekstu i aktualizuje jego pozycję.
+        Regenerates the text surface and recalculates its spatial bounds.
 
-        Wywoływana automatycznie przy zmianie tekstu, koloru lub czcionki.
+        Triggered automatically upon state changes (text, color, or font).
         """
         try:
             self._text_surface = self._font.render(self._text, True,
@@ -101,7 +99,12 @@ class Text:
         self._update_position()
 
     def _update_position(self) -> None:
-        """Oblicza pozycję tekstu na podstawie kotwicy (anchor) i offsetu."""
+        """
+        Dynamically calculates the text position using anchor resolution.
+
+        Uses reflection (setattr) to map anchor strings to Rect attributes,
+        ensuring flexible UI layouts.
+        """
         if isinstance(self._surface, pygame.Rect):
             self._pos = pygame.Vector2(self._surface.center)
         else:
@@ -116,10 +119,10 @@ class Text:
 
     def set_text(self, new_text: str = '') -> None:
         """
-        Ustawia nową treść tekstu i przerysowuje go.
+        Updates the text content and triggers a re-render.
 
         Args:
-            new_text (str): Nowy tekst.
+            new_text (str): The new string to be displayed.
         """
         if new_text == '':
             return
@@ -127,13 +130,12 @@ class Text:
         self._text = str(new_text)
         self._update_render()
 
-    def set_text_color(self, new_color: tuple):
+    def set_text_color(self, new_color: tuple) -> None:
         """
-        Ustawia nowy kolor tekstu. W przypadku podania
-        niepoprawnych danych ustawia kolor na czarny.
+        Updates the text color with built-in component validation.
 
         Args:
-            new_color (tuple): Krotka (R, G, B).
+            new_color (tuple): RGB tuple (R, G, B).
         """
         r, g, b = new_color
 
@@ -159,38 +161,32 @@ class Text:
             self._update_render()
 
     def draw(self, screen: pygame.Surface) -> None:
-        """Rysuje tekst na ekranie."""
+        """Renders the text surface to the target screen."""
         if self._text_surface is not None:
             screen.blit(self._text_surface, self._text_rect)
 
 
 class Button(GameObject):
     """
-    Klasa reprezentująca interaktywny przycisk.
+    An interactive UI element that inherits spatial properties from GameObject.
 
-    Dziedziczy po GameObject (grafika, pozycja).
-    Dodaje obsługę kliknięć myszą.
+    Adds event handling for mouse interactions (hitbox collision detection).
 
     Attributes:
-        _pos (pygame.Vector2): Pozycja środka przycisku.
-        _text (Text): tekst wyświetlany na przycisku.
+        _pos (pygame.Vector2): Center position of the button.
     """
 
     def __init__(self, object_data: dict, screen_size: pygame.Vector2):
         """
-        Inicjalizuje przycisk.
-
-        Oblicza jego pozycję na podstawie kotwicy (anchor) względem ekranu.
+        Initializes the button and calculates its anchor-based position.
 
         Args:
-            object_data (dict): Słownik z konfiguracją.
-            screen_size (pygame.Vector2): Rozmiar ekranu.
+            object_data (dict): Button configuration (anchor, offsets, etc.).
+            screen_size (pygame.Vector2): The parent screen dimensions.
         """
-        anchor = object_data.get('anchor', 'center')  # Domyślnie środek
+        anchor = object_data.get('anchor', 'center')
         off_x = object_data.get('x_offset', 0)
         off_y = object_data.get('y_offset', 0)
-
-        # Obliczamy punkt bazowy na podstawie kotwicy
 
         self._pos = pygame.Vector2(helpers.base_pos_on_anchor(anchor,
                                                               screen_size))
@@ -199,24 +195,25 @@ class Button(GameObject):
 
     @property
     def size(self) -> tuple:
-        """Zwraca rozmiar przycisku (szer, wys)."""
+        """Returns the geometric extents (width, height) of the button."""
         return self._object_rect.size
 
     @property
     def rect(self) -> pygame.Rect:
-        """Zwraca prostokąt kolizji przycisku."""
+        """Returns the interaction hitbox (Rect) of the button."""
         return self._object_rect
 
     def is_clicked(self, lmb_clicked: bool,
                    mouse_pos: tuple) -> bool:
         """
-        Sprawdza, czy przycisk został kliknięty w bieżącej klatce.
+        Performs O(1) collision detection for mouse click events.
 
         Args:
-            events (list): Lista zdarzeń Pygame.
+            lmb_clicked (bool): Whether the Left Mouse Button was clicked.
+            mouse_pos (tuple): Current (x, y) coordinates of the cursor.
 
         Returns:
-            bool: True, jeśli nastąpiło kliknięcie LPM na przycisku.
+            bool: True if the click event occurred within the button's bounds.
         """
         if lmb_clicked:
             m_collision = self._object_rect.collidepoint(mouse_pos)
@@ -227,31 +224,32 @@ class Button(GameObject):
 
 class TextButton(Button):
     """
-    Przycisk z napisem w środku.
+    A composite UI component consisting of an interactive Button
+    and a Text label.
 
-    Rozszerza klasę Button o obiekt Text wyśrodkowany względem przycisku.
+    Implements a fallback mechanism to ensure UI integrity
+    even with missing data.
     """
     def __init__(self, object_data: dict, screen_size: pygame.Vector2):
         """
-        Inicjalizuje przycisk z tekstem.
+        Initializes the button and its centered text label.
 
         Args:
-            object_data (dict): Słownik konfiguracyjny.
-            screen_size (pygame.Vector2): Rozmiar ekranu.
+            object_data (dict): Config dictionary containing both button
+                                and text data.
+            screen_size (pygame.Vector2): Parent screen dimensions.
         """
         super().__init__(object_data, screen_size)
-        # To zabezpiecza przed pustą listą [], która prześlizgnęła się przez
-        # initialize_buttons
+        # Handle missing or malformed text data lists
         texts_list = object_data.get('texts', [])
         if texts_list and len(texts_list) > 0:
             text_data = texts_list[0]
         else:
-            # Awaryjny tekst, żeby gra nie padła
             text_data = {'text': 'Error', 'font_size': 35}
 
         self._text = Text(text_data, self._object_rect)
 
     def draw(self, screen):
-        """Wyświetla tekst na guziku."""
+        """Renders both the button background and its text label."""
         super().draw(screen)
         self._text.draw(screen)

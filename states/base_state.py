@@ -8,32 +8,34 @@ import pygame
 
 class State:
     """
-    Bazowa klasa Stanu gry.
+    Abstract base class for all game states (e.g., Menu, Gameplay, Pause).
 
-    Klasa ta zarządza wspólnymi elementami dla wszystkich stanów:
-    - pobiera dane z pliku konfiguracyjnego json
-    - ustawia tło stanu
-    - tworzy podstawowe obiekty gry i rysuje je
-    - aktualizuje wyniki
+    The State class serves as an orchestration layer responsible for:
+    - Managing state-specific lifecycles (Update/Draw).
+    - Data-driven initialization of UI components and game objects
+      from configuration data.
+    - Handling background resource loading and fallback mechanisms.
+    - Providing centralized label management for real-time score updates.
 
     Attributes:
-        _screen_size (pygame.Vector2): Wymiary okna gry.
-        _buttons_dict (dict): Słownik utworzonych przycisków w formacie
-                                {nazwa przycisku: obiekt przycisku}.
-        _texts_dict (dict): Słownik utworzonych tekstów w formacie
-                                {nazwa tekstu: obiekt tekstu}.
-        _objects (list): Lista obiektów widocznych na ekranie.
-        _background_image (pygame.Surface): Obraz tła dla danego stanu.
+        _screen_size (pygame.Vector2): The logical resolution
+                                        of the game window.
+        _buttons_dict (dict): A registry of active buttons
+                                mapping names to objects.
+        _texts_dict (dict): A registry of active text labels
+                                mapping names to objects.
+        _objects (list): A collection of renderable entities
+                            currently in the state.
+        _background_image (pygame.Surface): The processed background surface.
     """
     def __init__(self, screen_size: pygame.Vector2, data: dict):
         """
-        Inicjalizuje bazowy obiekt stanu, zapisuje rozmiar okna gry,
-        wywołuje metody tworzące wspólne dla wszystkich stanów obiekty
-        (przyciski, teksty).
+        Initializes the state context and bootstraps UI/game components.
 
         Args:
-            screen_size (pygame.Vector2): Rozmiar okna gry.
-            data (dict): Słownik danych konfiguracyjnych stanu.
+            screen_size (pygame.Vector2): Desired screen dimensions.
+            data (dict): State configuration data extracted from JSON/Dict
+                            source.
         """
         if screen_size.x > 0 and screen_size.y > 0:
             self._screen_size = screen_size
@@ -47,14 +49,13 @@ class State:
 
     def _initialize_objects(self, data: dict) -> list:
         """
-        Wywołuje metodę tworzącą przyciski, dodaje je do słownika
-        oraz dołącza listę przycisków do listy widocznych obiektów.
+        Parses configuration data to instantiate game objects.
 
         Args:
-            data (dict): Słownik danych konfiguracyjnych stanu.
+            data (dict): The configuration source.
 
         Returns:
-            list: Lista widocznych obiektów w stanie.
+            list: A collection of instantiated game objects.
         """
         result = []
 
@@ -67,13 +68,17 @@ class State:
 
     def _initialize_buttons(self, data: dict) -> list:
         """
-        Tworzy obiekty przycisków dla pobranych danych i dodaje je do listy i
-        słownika wszystkich przycisków w stanie
-        (w formacie {nazwa przycisku: obiekt przycisku}).
-        Zwraca listę przycisków.
+        Factory method to create buttons and register them
+        in the state registry.
+
+        Distinguishes between standard Buttons and TextButtons based on
+        the presence of text metadata.
 
         Args:
-            data (dict): Słownik danych konfiguracyjnych stanu.
+            data (dict): Button configuration dictionary.
+
+        Returns:
+            list: A list of instantiated button objects.
         """
         object_data = data['buttons']
 
@@ -90,11 +95,10 @@ class State:
 
     def _create_texts(self, data: dict) -> None:
         """
-        Tworzy obiekty tekstów dla pobranych danych i dodaje je do słownika
-        wszystkich tekstów w stanie (w formacie {nazwa tekstu: obiekt tekstu}).
+        Instantiates text components and registers them in the state registry.
 
         Args:
-            data (dict): Słownik danych konfiguracyjnych stanu.
+            data (dict): Text configuration source.
         """
         if 'texts' in data:
             object_data = data['texts']
@@ -104,12 +108,14 @@ class State:
 
     def _update_score_labels(self, curr_score: int, high_score: int) -> None:
         """
-        Aktualizuje teksty wyników(bieżący i high score),
-        szukając ich w słowniku po nazwie.
+        Synchronizes score-related UI labels with current game values.
+
+        Utilizes string formatting and label registry lookup for
+        efficient UI updates.
 
         Args:
-            curr_score (int): Aktualny wynik.
-            high_score (int): Rekord punktowy w historii gry.
+            curr_score (int): The current player score.
+            high_score (int): The historical maximum score.
         """
         score_obj = self._texts_dict.get('score_text')
         if score_obj:
@@ -125,12 +131,11 @@ class State:
 
     def _set_background(self, img_path: str) -> None:
         """
-        Wczytuje obraz z podanej ścieżki i zapisuje go, jako tło stanu.
-        W przypadku braku lub występowaniu błędnego pliku w podanej ścieżce,
-        ustawia tło na różowy prostokąt.
+        Loads the background asset with a fallback
+        mechanism for missing resources.
 
         Args:
-            img_path (str): Ścieżka do pliku z tłem.
+            img_path (str): Filepath to the background image.
         """
         try:
             self._background_image = helpers.load_image(img_path,
@@ -141,39 +146,44 @@ class State:
 
     def _draw_objects(self, screen: pygame.Surface) -> None:
         """
-        Wywołuje dla każdego z utworzonych w stanie obiektów metodę draw,
-        wyświetlającą go na przekazanym ekranie.
+        Orchestrates the rendering of all registered game objects.
 
         Args:
-            screen (pygame.Surface): Ekran, na którym mają
-                                     zostać wyświetlone obiekty.
+            screen (pygame.Surface): Target rendering context.
         """
         for obj in self._objects:
             obj.draw(screen)
 
     def _draw_texts(self, screen: pygame.Surface) -> None:
         """
-        Wywołuje dla każdego z utworzonych w stanie tekstów metodę draw,
-        wyświetlającą go na przekazanym ekranie.
+        Orchestrates the rendering of all registered text labels.
 
         Args:
-            screen (pygame.Surface): Ekran, na którym mają
-                                     zostać wyświetlone teksty.
+            screen (pygame.Surface): Target rendering context.
         """
         for text in self._texts_dict.values():
             text.draw(screen)
 
     def update(self, input_data: InputData) -> GameSignal:
+        """
+        The per-frame logic update hook. To be overridden by subclasses.
+
+        Args:
+            input_data (InputData): Current frame input snapshot.
+
+        Returns:
+            GameSignal: A signal to the main app indicating state
+                        transition status.
+        """
         return GameSignal.STAY
 
     def draw(self, screen: pygame.Surface) -> None:
         """
-        Wyświetla tło stanu oraz wywołuje metody rysujące na podanym ekranie,
-        obiekty i teksty ze stanu.
+        The per-frame rendering hook. Manages background
+        and sub-component drawing.
 
         Args:
-            screen (pygame.Surface): Ekran, na którym mają
-                                     zostać wyświetlone teksty.
+            screen (pygame.Surface): Target rendering context.
         """
         screen.fill((255, 255, 255))
         screen.blit(self._background_image, (0, 0))
