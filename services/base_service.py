@@ -56,11 +56,11 @@ class BaseService:
                 self._current_data = json.load(file_handle)
             return self._current_data
         except FileNotFoundError:
-            # tu dodać logging
+            # Placeholder for future logging implementation
             raise
         except ValueError:
-            # tu dodać logging
+            # Placeholder for future logging implementation
             raise
         except json.JSONDecodeError:
-            # 'Tu dodać logging'
+            # Placeholder for future logging implementation
             raise

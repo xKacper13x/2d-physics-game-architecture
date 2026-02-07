@@ -164,18 +164,31 @@ class State:
         for text in self._texts_dict.values():
             text.draw(screen)
 
+    def _handle_input(self, input_data: InputData) -> GameSignal:
+        """
+        Placeholder for input handling logic.
+        Intended to be overridden by subclasses (Template Method Pattern).
+
+        Args:
+            input_data (InputData): Snapshot of current frame inputs.
+
+        Returns:
+            GameSignal: Default return value is STAY.
+        """
+        return GameSignal.STAY
+
     def update(self, input_data: InputData) -> GameSignal:
         """
-        The per-frame logic update hook. To be overridden by subclasses.
+        The per-frame logic update hook.
+        Delegates to the overridable input handler.
 
         Args:
             input_data (InputData): Current frame input snapshot.
 
         Returns:
-            GameSignal: A signal to the main app indicating state
-                        transition status.
+            GameSignal: A signal to the main app indicating state transition.
         """
-        return GameSignal.STAY
+        return self._handle_input(input_data)
 
     def draw(self, screen: pygame.Surface) -> None:
         """

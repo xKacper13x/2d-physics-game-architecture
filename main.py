@@ -144,8 +144,6 @@ class AngryKnightsApp:
         while self._running:
             events = pygame.event.get()
 
-            # 1. Przekaż obsługę logiki do aktualnego stanu
-            # Stan zwraca samego siebie lub NOWY stan
             input_data = self._input_handler.process_data(events)
 
             if input_data.key_F11_down:
@@ -154,7 +152,7 @@ class AngryKnightsApp:
             result = self._state.update(input_data)
             self._state = self._manage_states(result)
 
-            # 2. Rysowanie
+            # Rendering
             self._state.draw(self._screen)
 
             for event in events:

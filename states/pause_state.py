@@ -7,29 +7,27 @@ import pygame
 
 class PauseState(State):
     """
-    Stan gry reprezentujący menu pauzy.
+    Manages the 'Pause Menu' overlay interaction.
 
-    Jest to stan nakładkowy (Overlay), co oznacza, że jest wyświetlany
-    "na wierzchu" zatrzymanej rozgrywki, nie usuwając jej z pamięci.
+    This state implements a non-destructive suspension of the active gameplay.
+    It renders on top of the preserved game state (Overlay pattern), allowing
+    the player to resume, restart, or exit without losing the visual context.
 
     Attributes:
-        _paused_state (State): Obiekt stanu gry (GameState), który został
-                               zatrzymany i do którego można wrócić.
-        _play_button (Button): Przycisk wznawiający grę.
-        _retry_button (Button): Przycisk restartujący poziom.
-        _quit_button (Button): Przycisk cofający do menu głównego.
+        _paused_state (State): The suspended GameState instance, retained in
+                                memory for resumption or background rendering.
+        _play_button (Button): UI control to resume execution.
+        _retry_button (Button): UI control to reload the current level.
+        _settings_button (Button): UI control for configuration (placeholder).
+        _quit_button (Button): UI control to return to the main menu.
     """
     def __init__(self, screen_size: pygame.Vector2, paused_state: State):
         """
-        Inicjalizuje menu pauzy.
-
-        Wczytuje konfigurację wizualną z pliku JSON i zapamiętuje stan,
-        z którego pauza została wywołana. Wywołuje tworzenie przycisków
+        Initializes the pause overlay and captures the current game context.
 
         Args:
-            screen_size (pygame.Vector2): Wymiary okna gry.
-            paused_state (State): Stan gry (GameState), który ma zostać
-                                  wznowiony po wyjściu z pauzy.
+            screen_size (pygame.Vector2): Dimensions of the application window.
+            paused_state (State): The active GameState to be suspended.
         """
         self._paused_state = paused_state
         service = BaseService()
@@ -39,43 +37,38 @@ class PauseState(State):
 
     @property
     def paused_state(self) -> State:
-        """
-        Zwraca stan gry, który został zapauzowany.
-
-        Returns:
-            State: Zapamiętany obiekt GameState.
-        """
+        """Returns the suspended game state instance."""
         return self._paused_state
 
     @property
     def level(self) -> int:
-        """
-        Zwraca numer poziomu z zapauzowanej gry.
-
-        Returns:
-            int: Numer poziomu.
-        """
+        """Returns the level ID from the suspended state context."""
         return self._paused_state.level
 
     def _create_buttons(self) -> None:
         """
-        Przypisuje przyciski do zmiennych.
+        Maps UI components from the generic registry
+        to class attributes.
         """
         self._play_button = self._buttons_dict['play_button']
         self._retry_button = self._buttons_dict['retry_button']
         self._settings_button = self._buttons_dict['settings_button']
         self._quit_button = self._buttons_dict['quit_button']
 
-    def update(self, input_data: InputData) -> GameSignal:
+    def _handle_input(self, input_data: InputData) -> GameSignal:
         """
-        Obsługuje interakcję z menu pauzy (przyciski i klawisze).
+        Processes user interaction with the pause menu controls.
+
+        Evaluates button clicks (Resume, Retry, Quit) and hotkeys (ESC)
+        to determine the next state transition.
 
         Args:
-            events (list): Lista zdarzeń Pygame.
+            input_data (InputData): Snapshot of current frame inputs
+                                    (mouse state, position, keyboard).
 
         Returns:
-            str: Komenda sterująca (np. 'UNPAUSE_GAME', 'RESTART_LEVEL').
-                 Zwraca 'STAY', jeśli nie podjęto żadnej akcji.
+            GameSignal: Command indicating the desired state transition
+                        (e.g., UNPAUSE_GAME, RESTART_LEVEL).
         """
         next_state = GameSignal.STAY
         if self._play_button.is_clicked(input_data.lmb_clicked,
@@ -86,7 +79,7 @@ class PauseState(State):
             return GameSignal.RESTART_LEVEL
         if self._settings_button.is_clicked(input_data.lmb_clicked,
                                             input_data.mouse_pos):
-            # Tu można dodać ekran ustawień aplikacji
+            # Placeholder for future settings implementation
             pass
         if self._quit_button.is_clicked(input_data.lmb_clicked,
                                         input_data.mouse_pos):
@@ -99,14 +92,16 @@ class PauseState(State):
 
     def draw(self, screen: pygame.Surface) -> None:
         """
-        Rysuje menu pauzy na ekranie.
+        Renders the pause menu composition.
 
-        Najpierw rysuje zapauzowaną grę (jako tło), a następnie
-        elementy interfejsu pauzy na wierzchu.
+        Frozen game state first, followed by the pause UI elements,
+        creating a visual overlay effect.
 
         Args:
-            screen (pygame.Surface): Powierzchnia, na której ma
-                                     zostać narysowany stan.
+            screen (pygame.Surface): The target rendering surface.
         """
+        # Render the frozen game state as the background layer
         self._paused_state.draw(screen)
+
+        # Render the pause menu UI on top
         self._draw_objects(screen)

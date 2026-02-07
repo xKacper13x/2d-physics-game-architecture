@@ -7,33 +7,29 @@ import pygame
 
 class LevelCompleteState(State):
     """
-    Stan podsumowania poziomu.
+    Manages the 'Level Summary' interface displayed upon level completion.
 
-    Wyświetlany po zakończeniu poziomu rozgrywki.
-    Prezentuje wynik punktowy, high score oraz umożliwia przejście dalej,
-    restart lub wyjście.
+    This state acts as an overlay, rendering on top of the frozen game world.
+    It presents performance metrics (score, high score) and offers navigation
+    options (Next Level, Retry, Quit) based on player success.
 
     Attributes:
-        _current_score (int): Wynik uzyskany w zakończonym poziomie.
-        _high_score (int): Rekord punktowy poziomu.
-        _level (int): Numer zakończonego poziomu.
-        _completed_level (State): Obiekt zakończonej gry (do tła).
-        _overlay (pygame.Surface): Półprzezroczysta warstwa
-                                   przyciemniająca tło.
-        _overlay_rect (pygame.Rect): Pozycja warstwy przyciemniającej.
+        _current_score (int): Points achieved in the just-concluded session.
+        _high_score (int): Historical record for the level.
+        _level (int): Numeric identifier of the completed level.
+        _completed_level (State): Reference to the previous GameState instance,
+                                  used for background rendering (Snapshot).
+        _overlay (pygame.Surface): Semi-transparent surface for visual dimming.
     """
     def __init__(self, screen_size: pygame.Vector2, completed_level: State):
         """
-        Inicjalizuje ekran końca poziomu.
-
-        Pobiera wyniki z zakończonej gry, wczytuje konfigurację UI
-        oraz przygotowuje grafikę przyciemnienia tła.
+        Initializes the summary state using data from the finished session.
 
         Args:
-            screen_size (pygame.Vector2): Wymiary okna gry.
-            completed_level (State): Stan zakończonej gry (GameState),
-                                     z którego pobierane są wyniki
-                                     i numer poziomu.
+            screen_size (pygame.Vector2): Dimensions of the application window.
+            completed_level (State): The game state instance that just ended.
+                                     Used to extract scoring data and render
+                                     the background context.
         """
         scores = completed_level.scores
         self._current_score, self._high_score = scores
@@ -55,90 +51,75 @@ class LevelCompleteState(State):
 
     @property
     def completed_level_state(self) -> State:
-        """
-        Zwraca obiekt stanu ukończonego poziomu.
-
-        Returns:
-            State: Obiekt stanu zakończonego poziomu.
-        """
+        """Returns the reference to the frozen game state."""
         return self._completed_level
 
     @property
     def level(self) -> int:
-        """
-        Zwraca numer ukończonego poziomu.
-
-        Returns:
-            int: Numer poziomu.
-        """
+        """Returns the ID of the level being summarized."""
         return self._level
 
     def _create_buttons(self) -> None:
         """
-        Przypisuje obiekty przycisków ze słownika do dedykowanych atrybutów.
-
-        Ułatwia to odwoływanie się do nich w metodzie obsługi wejścia.
+        Maps generic button references to
+        attributes for logic handling.
         """
         self._play_button = self._buttons_dict['play_button']
         self._retry_button = self._buttons_dict['retry_button']
         self._quit_button = self._buttons_dict['quit_button']
 
-    def _handle_input(self, lmb_clicked: bool,
-                      mouse_pos: tuple) -> GameSignal:
+    def _handle_input(self, input_data: InputData) -> GameSignal:
         """
-        Sprawdza interakcję gracza z przyciskami interfejsu.
+        Processes user interaction with the summary UI.
+
+        Determines the next state transition based on button clicks:
+        - Play: Advances to the next level if score > 0, else restarts.
+        - Retry: Reloads the current level immediately.
+        - Quit: Returns to the main menu.
 
         Args:
-            events (list): Lista zdarzeń Pygame.
+            input_data (InputData): Snapshot of current frame inputs
+                                    (mouse state, position).
 
         Returns:
-            str: Komenda sterująca zmianą stanu (lub 'STAY').
+            GameSignal: Command indicating the desired state transition.
         """
         next_state = GameSignal.STAY
-        if self._play_button.is_clicked(lmb_clicked, mouse_pos):
+        if self._play_button.is_clicked(input_data.lmb_clicked,
+                                        input_data.mouse_pos):
+            # Conditional logic: Can only proceed
+            # if the level was actually passed
             if self._current_score > 0:
                 next_state = GameSignal.NEXT_LEVEL
             else:
                 next_state = GameSignal.RESTART_LEVEL
-        elif self._retry_button.is_clicked(lmb_clicked, mouse_pos):
+        elif self._retry_button.is_clicked(input_data.lmb_clicked,
+                                           input_data.mouse_pos):
             next_state = GameSignal.RESTART_LEVEL
-        elif self._quit_button.is_clicked(lmb_clicked, mouse_pos):
+        elif self._quit_button.is_clicked(input_data.lmb_clicked,
+                                          input_data.mouse_pos):
             next_state = GameSignal.GO_TO_MENU
-        return next_state
-
-    def update(self, input_data: InputData) -> GameSignal:
-        """
-        Główna metoda aktualizacji logiki podsumowania.
-
-        Args:
-            events (list): Lista zdarzeń Pygame.
-
-        Returns:
-            str: Komenda sterująca oznaczająca następny stan
-                 lub pozostanie w aktualnym.
-        """
-        next_state = self._handle_input(input_data.lmb_clicked,
-                                        input_data.mouse_pos)
         return next_state
 
     def draw(self, screen: pygame.Surface) -> None:
         """
-        Rysuje ekran podsumowania.
-
-        Kolejność:
-        1. Tło (zakończony poziom).
-        2. Przyciemnienie (Overlay).
-        3. UI (przyciski, teksty).
+        Main logic step for the summary screen.
 
         Args:
-            screen (pygame.Surface): Ekran docelowy.
+            input_data (InputData): Snapshot of current frame inputs.
+
+        Returns:
+            GameSignal: Signal for the main application loop.
         """
+        # 1. Background Layer (The frozen game world)
         self._completed_level.draw(screen)
 
+        # 2. Overlay Layer (Dimming effect)
         self._overlay.fill((0, 0, 0, 215))
         overlay_rect = self._overlay.get_rect()
         overlay_rect.center = (self._screen_size / 2)
         screen.blit(self._overlay, overlay_rect)
 
+        # 3. UI Layer
         self._draw_objects(screen)
         self._draw_texts(screen)

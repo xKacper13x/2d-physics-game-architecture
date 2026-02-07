@@ -7,31 +7,31 @@ import pygame
 
 class MainMenuState(State):
     """
-    Stan gry reprezentujący menu główne.
-    Zarządza interakcją z użytkownikiem przed rozpoczęciem rozgrywki.
+    Represents the main menu state, serving as the application's entry point.
 
-    Posiada trzy przyciski, które obsługuje:
-    - wciśnięcie przycisku 'play' uruchamia pierwszy poziom gry
-    - wciśnięcie przycisku 'options' przełącza tryb wyświetlania
-        między oknem a pełnym ekranem (Fullscreen).
-    - wciśnięcie przycisku 'quit' zamyka program
+    This class manages user interaction prior to gameplay initialization.
+    It orchestrates:
+    - Transitioning to the active game loop (Play).
+    - Toggling display modes via event injection (Options/F11).
+    - Graceful application termination (Quit).
 
     Attributes:
-        _play_button (TextButton) - Przycisk uruchamiający grę.
-        _options_button (TextButton) - Przycisk przełączający
-                                       tryb wyświetlania okna.
-        _quit_button (TextButton) - Przycisk wyłączający grę.
+        _play_button (TextButton): UI component triggering
+                                    the game start sequence.
+        _options_button (TextButton): UI component for toggling
+                                        Fullscreen/Windowed mode.
+        _quit_button (TextButton): UI component for terminating
+                                    the application process.
     """
     def __init__(self, screen_size: pygame.Vector2):
         """
-        Inicjalizuje obiekt klasy MainMenuState.
-        Otwiera plik konfiguracyjny json, z którego dane
-        przekazuje do konstruktora klasy bazowej.
-        Pobiera z pliku konfiguracyjnego ścieżkę do tła.
-        Wywołuje metody tworzące przyciski i ustawiające tło.
+        Bootstraps the menu state context.
+
+        Loads UI configuration via BaseService and initializes the visual
+        environment (backgrounds, buttons) using the parent State logic.
 
         Args:
-            screen_size (pygame.Vector2): Rozmiar okna gry.
+            screen_size (pygame.Vector2): Dimensions of the application window.
         """
         service = BaseService()
         data = service.load_data('menu.json')
@@ -42,23 +42,29 @@ class MainMenuState(State):
 
     def _create_buttons(self) -> None:
         """
-        Przypisuje przyciski z utworzonego w konstruktorze słownika
-        do zmiennych.
+        Maps generic button references from the registry to specific
+        class attributes.
+
+        This aliasing improves code readability and provides semantic access
+        to specific UI controls (Play, Options, Quit).
         """
         self._play_button = self._buttons_dict['play_menu_button']
         self._options_button = self._buttons_dict['options_menu_button']
         self._quit_button = self._buttons_dict['quit_menu_button']
 
-    def update(self, input_data: InputData) -> GameSignal:
+    def _handle_input(self, input_data: InputData) -> GameSignal:
         """
-        Wykrywa naciśnięcia przycisków, oraz zwraca adekwatne do nich
-        komendy sterujące w postaci stringa.
+        Processes raw input data to determine the next state.
+
+        - 'Play' triggers a direct state transition to gameplay.
+        - 'Options' injects an F11 key event for display mode toggling.
+        - 'Quit' injects a system QUIT event for graceful shutdown.
 
         Args:
-            events (list): Lista wydarzeń wykrywanych przez bibliotekę pygame.
+            input_data (InputData): Snapshot of current frame inputs.
 
         Returns:
-            str: Komenda sterująca (np 'START_GAME', 'STAY')
+            GameSignal: The command indicating the next application state.
         """
         next_state = GameSignal.STAY
         if self._play_button.is_clicked(input_data.lmb_clicked,
@@ -74,15 +80,13 @@ class MainMenuState(State):
                                           input_data.mouse_pos):
             quit_event = pygame.event.Event(pygame.QUIT)
             pygame.event.post(quit_event)
-
         return next_state
 
     def draw(self, screen: pygame.Surface) -> None:
         """
-        Wywołuje metodę rysującą klasy bazowej.
+        Delegates rendering to the base State class orchestration.
 
         Args:
-            screen (pygame.Surface): Powierzchnia, na której
-                                     rysowany jest stan.
+            screen (pygame.Surface): The target rendering surface.
         """
         super().draw(screen)

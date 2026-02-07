@@ -15,49 +15,56 @@ import pymunk
 
 class GameState(State):
     """
-    Stan gry reprezentujący poziomy gry.
+    Manages the active gameplay state for individual levels.
 
-    Klasa ta odpowiada za:
-    - Zarządzanie obiektami fizycznymi, tworzenie, aktualizowanie,
-      rysowanie i niszczenie ich.
-    - Inicjalizowanie przestrzeni do obliczeń fizycznych.
-    - Określenie działania i zasad gry.
-    - Zarządzanie wejściem pobranym od użytkownika.
+    This controller orchestrates the core game loop, including:
+    - Physics simulation lifecycle (initialization, updates, and cleanup).
+    - Entity management for projectiles, enemies, and structures.
+    - Input processing for the slingshot mechanics
+      (aiming, dragging, launching).
+    - Level progression logic and score synchronization
 
     Attributes:
-        _ammo_pointer (int): Wskaźnik na aktualnie używany pocisk.
-        _level (int): Numer poziomu gry.
-        _space (pymunk.Space): Przestrzeń fizyczna symulacji.
-        _high_score (int): Zapisany w pliku konfiguracyjnym gry, rekord
-                           punktowy poziomu.
-
-        _current_score (int): Aktualnie uzyskany wynik punktowy.
-        _max_dis (int): Maksymalne możliwe naciągnięcie procy.
-        _projectile_stopped (bool): Flaga określająca, czy wystrzelony pocisk
-                                    przestał się poruszać.
-        _level_ended (bool): Flaga określająca, czy aktualny poziom
-                             zakończył się.
-        _timer (float): Stoper mierzący opóźnienie zakończenia poziomu i
-                        przejścia do kolejnego stanu
-        _wait_time (int): ustalone opóźnienie przejścia do kolejnego stanu.
-        _ground (Ground): Obiekt statycznego podłoża.
-        _enemies (list): Lista przeciwników.
-        _object_on_sling (Projectile): Pocisk aktualnie znajdujący się na
-                                       procy.
-        _dragged_object (Projectile): Pocisk aktualnie trzymany przez kursor.
-        _structures (list): Lista struktur.
-        _slingshot (Slingshot): Obiekt procy.
+        _ammo_pointer (int): Index tracking the currently active projectile.
+        _level (int): Current level's ID.
+        _level_service (LevelService): Handles data-driven level loading
+                                        and high scores.
+        _trajectory_service (TrajectoryService): Predicts
+                                                 and renders the flight path.
+        _space (pymunk.Space): The physical world simulation container.
+        _high_score (int): Current level's points record,
+                            stored in game's configuration file.
+        _current_score (int): Current amount of points.
+        _max_dis (int): Maximum allowable stretch distance
+                        for the slingshot bands.
+        _projectile_stopped (bool): Flag indicating whether the projectile
+                                    stopped moving.
+        _timer (float): High-precision accumulator for managing
+                        logic delays and transitions.
+        _wait_time (int): The predefined latency period (in seconds)
+                          before the state transition occurs.
+        _ground (Ground): Static ground's object.
+        _enemies (list): A registry of currently alive enemies.
+        _object_on_sling (Projectile): The projectile currently
+                                        loaded in the slingshot.
+        _dragged_object (Projectile): The projectile currently
+                                        manipulated by the cursor.
+        _level_ended (bool): Flag indicating the win/loss
+                             state has been triggered.
+        _structures (list): A registry of physical structures
+                            in the current level.
+        _slingshot (Slingshot): Instance of Slingshot
     """
     def __init__(self, screen_size: pygame.Vector2, level: int):
         """
-        Inicjalizuje stan gry dla podanego poziomu.
+        Initializes the game level, physics space, and UI components.
 
         Args:
-            screen_size (pygame.Vector2): Rozmiar okna gry.
-            level (int): Numer poziomu do załadowania.
+            screen_size (pygame.Vector2): Dimensions of the game window.
+            level (int): Numeric ID of the level to be loaded.
 
         Raises:
-            ValueError: Jeśli numer poziomu nie jest liczbą całkowitą.
+            ValueError: If the 'level' argument is not an integer.
         """
         if not isinstance(level, int):
             raise ValueError('Level must be an integer')
@@ -92,38 +99,23 @@ class GameState(State):
 
     @property
     def level(self) -> int:
-        """
-        Zwraca numer aktualnego poziomu.
-
-        Returns:
-            int: Numer poziomu.
-        """
+        """Returns the current level number."""
         return self._level
 
     @property
     def current_score(self) -> int:
-        """
-        Zwraca aktualny wynik gracza.
-
-        Returns:
-            int: Liczba punktów.
-        """
+        """Returns the current session's accumulated points."""
         return self._current_score
 
     @property
     def high_score(self) -> int:
-        """
-        Zwraca najlepszy wynik (rekord) dla tego poziomu.
-
-        Returns:
-            int: Rekord punktowy.
-        """
+        """Returns the historical high score for the level."""
         return self._high_score
 
     @property
     def scores(self) -> tuple:
         """
-        Zwraca krotkę z wynikami (bieżący, rekord).
+        Returns the scoring state as a tuple.
 
         Returns:
             tuple: (current_score, high_score).
@@ -132,19 +124,20 @@ class GameState(State):
 
     def _create_buttons(self) -> None:
         """
-        Przypisuje przycisk do zmiennej
+        Maps generic button reference from the registry to specific
+        class attribute.
         """
         self._pause_button = self._buttons_dict['pause_button']
 
     def _initialize_objects(self, data: dict) -> list:
         """
-        Inicjalizuje obiekty gry (proca, wrogowie, struktury) podanych danych.
+        Parses level metadata to instantiate game entities.
 
         Args:
-            data (dict): Słownik konfiguracyjny.
+            data (dict): Full configuration dictionary.
 
         Returns:
-            list: Lista wszystkich obiektów do aktualizowania i rysowania.
+            list: Flattened list of all objects to be rendered and updated.
         """
         objects = super()._initialize_objects(data)
         data = data['objects']
@@ -165,10 +158,10 @@ class GameState(State):
 
     def _initialize_projectile(self) -> Projectile:
         """
-        Tworzy nowy obiekt pocisku na podstawie danych konfiguracyjnych.
+        Creates a new projectile instance based on the current ammo pointer.
 
         Returns:
-            Projectile: Nowy obiekt pocisku.
+            Projectile: The instantiated projectile ready for the slingshot.
         """
         data = self._projectiles_data[self._ammo_pointer]
         projectile = Projectile(self._space, data, self._slingshot_pos)
@@ -176,7 +169,9 @@ class GameState(State):
 
     def _perform_launch(self) -> None:
         """
-        Oblicza wektor siły i wystrzeliwuje pocisk z procy.
+        Calculates the propulsion vector and triggers the projectile launch.
+        Resets the projectile if the pull distance
+        is below the minimum threshold.
         """
         start_pos = self._current_projectile.position
         pull_vector = self._slingshot_pos - start_pos
@@ -194,12 +189,15 @@ class GameState(State):
     def _check_for_launch(self, lmb_released: bool, lmb_pressed: bool,
                           mouse_pos: tuple) -> None:
         """
-        Obsługuje logikę myszy (chwytanie, ciągnięcie, puszczanie procy).
+        Handles mouse interaction logic for aiming and firing the slingshot.
 
         Args:
-            events (list): Lista zdarzeń Pygame.
+            lmb_released (bool): True if the Left Mouse Button
+                                 was just released.
+            lmb_pressed (bool): True if the Left Mouse Button
+                                is currently held.
+            mouse_pos (tuple): Current (x, y) coordinates of the mouse cursor.
         """
-        # obsluga puszczenia myszy(strzal lub reset)
         if lmb_released:
             if self._dragged_object is not None:
                 self._perform_launch()
@@ -212,16 +210,16 @@ class GameState(State):
             self._dragged_object.drag(self._slingshot_pos,
                                       mouse_pos,
                                       self._max_dis)
-        # Zabezpieczenie: jeśli nie trzymamy przycisku, puszczamy obiekt
         elif lmb_pressed:
             self._dragged_object = None
 
     def _kill_object(self, obj_to_remove: PhysicalObject) -> None:
         """
-        Usuwa obiekt fizyczny z gry i symulacji.
+        Safely removes an entity from the physics space and the render list.
 
         Args:
-            obj (PhysicalObject): Obiekt do usunięcia.
+            obj_to_remove (PhysicalObject): The object instance
+                                            to be destroyed.
         """
         space_bodies = self._space.bodies
         if obj_to_remove._body in space_bodies:
@@ -233,8 +231,8 @@ class GameState(State):
 
     def _end_level(self) -> None:
         """
-        Rozpoczyna zakończenie poziomu. Zaznacza poziom jako zakończony
-        i resetuje wynik w przypadku porażki.
+        Initiates the end-of-level sequence.
+        Resets score if enemies remain, and triggers the transition timer.
         """
         if self._enemies:
             self._current_score = 0
@@ -243,10 +241,10 @@ class GameState(State):
 
     def _draw_trajectory(self, screen: pygame.Surface):
         """
-        Rysuje celownik(przewidywaną trajektorię lotu pocisku).
+        Calculates and renders a predicted flight path for the projectile.
 
         Args:
-            screen (pygame.Surface): ekran docelowy
+            screen (pygame.Surface): Target rendering surface.
         """
         if self._dragged_object is None:
             return
@@ -276,10 +274,10 @@ class GameState(State):
 
     def _draw_objects(self, screen: pygame.Surface):
         """
-        Rysuje obiekty gry z uwzględnieniem warstw procy (przód/tył).
+        Renders game entities with specific Z-order for slingshot layers.
 
         Args:
-            screen (pygame.Surface): ekran docelowy
+            screen (pygame.Surface): Target rendering surface.
         """
         if self._object_on_sling is not None:
             rubber_anchor = self._object_on_sling.rubber_anchor
@@ -293,7 +291,10 @@ class GameState(State):
             super()._draw_objects(screen)
 
     def _update_entities(self) -> None:
-        """Aktualizuje obiekty, zlicza punkty i usuwa zniszczone."""
+        """
+        Updates physics-driven entities, collects points,
+        and cleans up destroyed objects.
+        """
         objects_to_kill = []
         for obj in self._objects:
             if isinstance(obj, (Enemy, Structure)):
@@ -309,7 +310,9 @@ class GameState(State):
             self._kill_object(obj)
 
     def _update_slingshot_status(self) -> None:
-        """Sprawdza, czy pocisk znajduje się na procy."""
+        """
+        Verifies if the projectile is physically seated on the slingshot bands.
+        """
         if self._current_projectile.is_on_sling(self._max_dis):
             self._object_on_sling = self._current_projectile
         else:
@@ -317,8 +320,8 @@ class GameState(State):
 
     def _update_projectile_status(self) -> None:
         """
-        Zarządza cyklem życia pocisku po wystrzale.
-        Wykrywa zatrzymanie lub wylot poza ekran i przygotowuje kolejny strzał.
+        Monitors the projectile post-launch
+        to detect when it stops or exits bounds.
         """
         if self._current_projectile.is_on_sling(self._max_dis):
             return
@@ -334,64 +337,40 @@ class GameState(State):
             if is_stopped or is_off_screen:
                 self._projectile_stopped = True
 
-                # Reset timera dla opoźnienia zakończenia poziomu
                 self._timer = 0
 
-    def _handle_input(self, lmb_clicked: bool, mouse_pos: tuple,
-                      key_esc_down: bool) -> str:
+    def _handle_input(self, input_data: InputData) -> str:
         """
-        Sprawdza kliknięcie przycisku pauzy lub klawisza ESC.
+        Evaluates input data to detect pause requests.
+
+        Checks interaction with the on-screen Pause button and the
+        standard ESC hotkey to trigger state interruption.
 
         Args:
-            events (list): Lista zdarzeń Pygame.
+            input_data (InputData): The standardized input snapshot for
+                                    the current frame.
 
         Returns:
-            str: Komenda sterująca, informująca o następnym stanie.
+            str: A GameSignal command (e.g., PAUSE_GAME) indicating
+                 the desired state transition.
         """
         result = GameSignal.STAY
-        if self._pause_button.is_clicked(lmb_clicked, mouse_pos):
+        if self._pause_button.is_clicked(input_data.lmb_clicked,
+                                         input_data.mouse_pos):
             result = GameSignal.PAUSE_GAME
 
-        if key_esc_down:
+        if input_data.key_esc_down:
             result = GameSignal.PAUSE_GAME
         return result
 
-    def update(self, input_data: InputData) -> str:
+    def _handle_projectile_transition(self) -> None:
         """
-        Główna metoda aktualizacji poziomu gry.
-        - Krok fizyki
-        - Sprawdzenie i obsługa strzału.
-        - Aktualizacja statusu procy.
-        - Aktualizacja wrogów i struktur.
-        - Zarządzanie pociskami.
-        - Obsługa zmiany pocisku.
-        - Obsługa UI
-        - Sprawdzenie warunków końca poziomu.
+        Handles the lifecycle of projectiles after they have come to a rest.
 
-        Args:
-            events (list): lista zdarzeń Pygame.
-
-        Returns:
-            str: Komenda sterująca, informująca o następnym stanie.
+        Increments a timer once a projectile stops moving. After a defined
+        delay, it either spawns the next projectile in the queue or
+        triggers the end of the level if ammunition is depleted.
         """
-        self._space.step(1/60)
-
-        if not self._level_ended:
-            self._check_for_launch(input_data.lmb_released,
-                                   input_data.lmb_pressed,
-                                   input_data.mouse_pos)
-
-        self._update_slingshot_status()
-
-        self._update_entities()
-
-        self._update_projectile_status()
-        # Gdy wszystkie obiekty przeciwników zostały zniszczone
-        # i odliczanie do zakończenia poziomu nie zostało jeszcze uruchomione,
-        # rozpoczyna zakończenie poziomu
-        if not self._enemies and not self._level_ended:
-            self._end_level()
-
         if self._projectile_stopped:
             self._timer += 1/60
             if self._timer >= 2:
@@ -407,12 +386,39 @@ class GameState(State):
                     self._projectile_stopped = False
                     self._timer = 0
 
-        next_state = self._handle_input(input_data.lmb_clicked,
-                                        input_data.mouse_pos,
-                                        input_data.key_esc_down)
+    def update(self, input_data: InputData) -> str:
+        """
+        Main logic step. Synchronizes physics simulation and game rules.
+
+        Args:
+            input_data (InputData): Object containing
+                                    current frame input states.
+
+        Returns:
+            str: GameSignal command for state management.
+        """
+        self._space.step(1/60)
+
+        if not self._level_ended:
+            self._check_for_launch(input_data.lmb_released,
+                                   input_data.lmb_pressed,
+                                   input_data.mouse_pos)
+
+        self._update_slingshot_status()
+
+        self._update_entities()
+
+        self._update_projectile_status()
+
+        if not self._enemies and not self._level_ended:
+            self._end_level()
+
+        self._handle_projectile_transition()
+
+        next_state = self._handle_input(input_data)
 
         if self._level_ended:
-            self._timer += 1/60  # Dodajemy czas jednej klatki
+            self._timer += 1/60
             if self._timer >= self._wait_time:
                 self._level_service.save_new_high_score(self._level,
                                                         self._current_score)
@@ -421,10 +427,11 @@ class GameState(State):
 
     def draw(self, screen: pygame. Surface) -> None:
         """
-        Rysuje cały stan gry.
+        Main rendering call. Orchestrates background,
+        trajectory, and entity drawing.
 
         Args:
-            screen (pygame.Surface): ekran docelowy
+            screen (pygame.Surface): The primary display surface.
         """
         super().draw(screen)
         self._draw_trajectory(screen)
