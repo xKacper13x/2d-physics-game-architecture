@@ -2,7 +2,7 @@
 
 ![Build Status](https://github.com/xKacper13x/2d-physics-game-architecture/actions/workflows/main.yml/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.10-blue.svg)
-![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)
+![Logic Coverage](https://img.shields.io/badge/core_logic-100%25-brightgreen)
 
 ## Visuals
 ![Gameplay](./assets/Gameplay.gif)
